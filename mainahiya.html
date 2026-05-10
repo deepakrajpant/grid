@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,7 +9,6 @@
 
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-
     body{
       background:#eef2f5;
       font-family:'Inter',sans-serif;
@@ -18,7 +18,6 @@
       align-items:center;
       min-height:100vh;
     }
-
     .container{
       max-width:1100px;
       width:100%;
@@ -27,35 +26,29 @@
       box-shadow:0 10px 30px rgba(0,0,0,.08);
       overflow:hidden;
     }
-
     .header{
       background:#006633;
       padding:1.5rem 2rem;
       color:#fff;
+      position:relative;
     }
-
-    .header h1{
-      font-size:1.6rem;
-      font-weight:600;
-      margin-bottom:.25rem;
+    .header h1{font-size:1.6rem;font-weight:600;margin-bottom:.25rem}
+    .header .division{font-size:.8rem;opacity:.85;margin-top:.3rem}
+    .header .sub{font-size:.75rem;opacity:.8;margin-top:.2rem}
+    .logout-btn {
+      position:absolute;
+      top:1.2rem;
+      right:1.8rem;
+      background:rgba(255,255,255,0.2);
+      border:1px solid rgba(255,255,255,0.45);
+      border-radius:40px;
+      padding:0.45rem 1.2rem;
+      font-weight:500;
+      font-size:0.8rem;
+      color:white;
+      cursor:pointer;
     }
-
-    .header .division{
-      font-size:.8rem;
-      opacity:.85;
-      margin-top:.3rem;
-    }
-
-    .header .sub{
-      font-size:.75rem;
-      opacity:.8;
-      margin-top:.2rem;
-    }
-
-    .form-body{
-      padding:1.8rem 2rem;
-    }
-
+    .form-body{padding:1.8rem 2rem;}
     .info-bar{
       background:#f5f8fa;
       border-radius:14px;
@@ -68,7 +61,6 @@
       margin-bottom:2rem;
       border:1px solid #e2e8f0;
     }
-
     .info-item{
       display:flex;
       align-items:center;
@@ -79,25 +71,16 @@
       border-radius:40px;
       color:#2c5a6e;
     }
-
-    .info-item strong{
-      color:#006633;
+    .date-input,.input-wrapper input{
+      border:none;
+      outline:none;
+      font-family:Inter,monospace;
     }
-
     .date-input{
       border:1px solid #cbdce6;
       border-radius:30px;
       padding:.35rem .8rem;
-      font-size:.85rem;
-      font-family:Inter,monospace;
-      outline:none;
     }
-
-    .date-input:focus{
-      border-color:#FF8C00;
-      box-shadow:0 0 0 2px rgba(255,140,0,.2);
-    }
-
     .edit-btn{
       background:#eef2f7;
       border:none;
@@ -107,26 +90,17 @@
       cursor:pointer;
       color:#006633;
     }
-
     .trans-grid{
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
       gap:1.5rem;
       margin-bottom:2rem;
     }
-
     .card{
       border:1px solid #e9edf2;
       border-radius:18px;
       padding:1.2rem;
-      transition:.2s;
     }
-
-    .card:hover{
-      border-color:#FF8C00;
-      box-shadow:0 8px 18px rgba(255,140,0,.08);
-    }
-
     .card-title{
       display:flex;
       justify-content:space-between;
@@ -134,12 +108,6 @@
       padding-bottom:.5rem;
       border-bottom:2px solid #eef2f7;
     }
-
-    .card-title h3{
-      color:#006633;
-      font-size:1.1rem;
-    }
-
     .mva-badge{
       font-size:.7rem;
       background:#eef3f8;
@@ -148,7 +116,6 @@
       color:#FF8C00;
       font-weight:600;
     }
-
     .input-group label{
       font-size:.7rem;
       font-weight:600;
@@ -157,7 +124,6 @@
       margin-bottom:6px;
       text-transform:uppercase;
     }
-
     .input-wrapper{
       display:flex;
       align-items:center;
@@ -166,21 +132,7 @@
       padding:.1rem .1rem .1rem 1rem;
       background:#f9fbfd;
     }
-
-    .input-wrapper:focus-within{
-      border-color:#FF8C00;
-      background:#fff;
-    }
-
-    .input-wrapper input{
-      border:none;
-      outline:none;
-      width:100%;
-      padding:.7rem .4rem;
-      background:transparent;
-      font-family:Inter,monospace;
-    }
-
+    .input-wrapper input{width:100%;padding:.7rem .4rem;background:transparent;}
     .unit{
       background:#eef3f8;
       padding:.2rem .9rem;
@@ -189,19 +141,7 @@
       color:#006633;
       font-weight:600;
     }
-
-    input[type=number]::-webkit-inner-spin-button,
-    input[type=number]::-webkit-outer-spin-button{
-      display:none;
-    }
-
-    .actions{
-      display:flex;
-      gap:1rem;
-      justify-content:center;
-      margin-bottom:1rem;
-    }
-
+    .actions{display:flex;gap:1rem;justify-content:center;margin-bottom:1rem;}
     .btn-primary,.btn-secondary{
       border:none;
       border-radius:50px;
@@ -209,123 +149,43 @@
       cursor:pointer;
       font-weight:600;
     }
-
-    .btn-primary{
-      background:#006633;
-      color:#fff;
-    }
-
-    .btn-secondary{
-      background:#fff4e6;
-      border:1px solid #FF8C00;
-      color:#006633;
-    }
-
-    .status{
-      margin-top:1rem;
-      padding:.7rem;
-      border-radius:50px;
-      text-align:center;
-      font-size:.8rem;
-      background:#f0f4f9;
-    }
-
-    .status.success{
-      background:#e8f5e9;
-      color:#006633;
-    }
-
-    .status.error{
-      background:#ffeae6;
-      color:#bc4e2c;
-    }
-
-    .footer{
-      background:#fafcfd;
-      border-top:1px solid #eef2f7;
-      padding:.8rem;
-      text-align:center;
-      font-size:.7rem;
-    }
-
-    @media(max-width:700px){
-      .form-body{padding:1.2rem}
-      .info-bar{flex-direction:column;align-items:stretch}
-    }
+    .btn-primary{background:#006633;color:#fff;}
+    .btn-secondary{background:#fff4e6;border:1px solid #FF8C00;color:#006633;}
+    .status{margin-top:1rem;padding:.7rem;border-radius:50px;text-align:center;font-size:.8rem;background:#f0f4f9;}
+    .status.success{background:#e8f5e9;color:#006633;}
+    .status.error{background:#ffeae6;color:#bc4e2c;}
+    .footer{background:#fafcfd;border-top:1px solid #eef2f7;padding:.8rem;text-align:center;font-size:.7rem;}
   </style>
 </head>
-
 <body>
-
 <div class="container">
-
   <div class="header">
     <h1>XYZ Substation</h1>
     <div class="division">Nepal Electricity Authority · Butwal Grid Division (BGD)</div>
     <div class="sub">Daily Peak Load Report</div>
+    <button id="logoutBtn" class="logout-btn" aria-label="Logout">⤿ Logout</button>
   </div>
 
   <div class="form-body">
-
     <div class="info-bar">
       <div class="info-item">Substation: <strong>XYZ</strong></div>
-
-      <div class="info-item">
-        Date:
-        <input type="date" id="recordDate" class="date-input">
-      </div>
-
-      <div class="info-item">
-        Operator:
-        <strong id="userIdDisplay">DEEPAK</strong>
-        <button id="editOperatorBtn" class="edit-btn">edit</button>
-      </div>
+      <div class="info-item">Date: <input type="date" id="recordDate" class="date-input"></div>
+      <div class="info-item">Operator: <strong id="userIdDisplay">DEEPAK</strong><button id="editOperatorBtn" class="edit-btn">edit</button></div>
     </div>
 
     <div class="trans-grid">
-
       <div class="card">
-        <div class="card-title">
-          <h3>Transformer 01</h3>
-          <span class="mva-badge">45 MVA </span>
-        </div>
-        <div class="input-group">
-          <label>Peak Amps</label>
-          <div class="input-wrapper">
-            <input type="number" id="t1_amps" placeholder="Required" step="any">
-            <span class="unit">A</span>
-          </div>
-        </div>
+        <div class="card-title"><h3>Transformer 01</h3><span class="mva-badge">45 MVA</span></div>
+        <div class="input-group"><label>Peak Amps</label><div class="input-wrapper"><input type="number" id="t1_amps" step="any"><span class="unit">A</span></div></div>
       </div>
-
       <div class="card">
-        <div class="card-title">
-          <h3>Transformer 02</h3>
-          <span class="mva-badge">46 MVA</span>
-        </div>
-        <div class="input-group">
-          <label>Peak Amps</label>
-          <div class="input-wrapper">
-            <input type="number" id="t2_amps" placeholder="Optional" step="any">
-            <span class="unit">A</span>
-          </div>
-        </div>
+        <div class="card-title"><h3>Transformer 02</h3><span class="mva-badge">45 MVA</span></div>
+        <div class="input-group"><label>Peak Amps</label><div class="input-wrapper"><input type="number" id="t2_amps" step="any"><span class="unit">A</span></div></div>
       </div>
-
       <div class="card">
-        <div class="card-title">
-          <h3>Transformer 03</h3>
-          <span class="mva-badge">47 MVA</span>
-        </div>
-        <div class="input-group">
-          <label>Peak Amps</label>
-          <div class="input-wrapper">
-            <input type="number" id="t3_amps" placeholder="Optional" step="any">
-            <span class="unit">A</span>
-          </div>
-        </div>
+        <div class="card-title"><h3>Transformer 03</h3><span class="mva-badge">100 MVA</span></div>
+        <div class="input-group"><label>Peak Amps</label><div class="input-wrapper"><input type="number" id="t3_amps" step="any"><span class="unit">A</span></div></div>
       </div>
-
     </div>
 
     <div class="actions">
@@ -333,173 +193,120 @@
       <button id="resetBtn" class="btn-secondary">Reset Fields</button>
     </div>
 
-    <div id="statusMsg" class="status">
-      Fill at least one transformer's Ampere value.
-    </div>
-
-    <div class="footer">
-      <span>NEA</span> · Butwal Grid Division · Google Sheets
-    </div>
-
+    <div id="statusMsg" class="status">Fill at least one transformer's Ampere value.</div>
+    <div class="footer">NEA · Butwal Grid Division · Google Sheets</div>
   </div>
 </div>
 
 <iframe name="hidden_google_iframe" style="display:none;"></iframe>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAMs4MtFfDVIFntC9hPYH_MClW1VsIJTZo",
+  authDomain: "gridlogin.firebaseapp.com",
+  databaseURL: "https://gridlogin-default-rtdb.firebaseio.com/",
+  projectId: "gridlogin",
+  storageBucket: "gridlogin.firebasestorage.app",
+  messagingSenderId: "860236561452",
+  appId: "1:860236561452:web:3b63bb006b0858b3426589"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+onAuthStateChanged(auth, user => {
+  if (!user) {
+    window.location.href = "index.html";
+  } else {
+    localStorage.setItem("userEmail", user.email);
+  }
+});
+
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  signOut(auth).then(() => window.location.href = "index.html");
+});
+
 (() => {
-
   const $ = id => document.getElementById(id);
-
-  const submitBtn = $("submitBtn"),
-        resetBtn = $("resetBtn"),
-        statusMsg = $("statusMsg"),
-        recordDate = $("recordDate"),
-        userDisplay = $("userIdDisplay"),
-        editBtn = $("editOperatorBtn"),
-        inputs = [$("t1_amps"), $("t2_amps"), $("t3_amps")],
-        iframe = document.querySelector("iframe");
+  const submitBtn = $("submitBtn"), resetBtn = $("resetBtn"), statusMsg = $("statusMsg"),
+        recordDate = $("recordDate"), userDisplay = $("userIdDisplay"), editBtn = $("editOperatorBtn"),
+        inputs = [$("t1_amps"), $("t2_amps"), $("t3_amps")], iframe = document.querySelector("iframe");
 
   const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScG9F5CDmCm8k6CIckSfJMxzIUQI8io0942FhyO-6B4lJT7EQ/formResponse";
-
   let operator = "DEEPAK";
 
   const today = new Date();
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth()+1).padStart(2,"0");
-  const dd = String(today.getDate()).padStart(2,"0");
+  recordDate.value = today.toISOString().split('T')[0];
 
-  const defaultInputDate = `${yyyy}-${mm}-${dd}`;
-  const defaultDisplayDate = `${yyyy}/${mm}/${dd}`;
-
-  recordDate.value = defaultInputDate;
-
-  const showStatus = (msg,error=false) => {
+  const showStatus = (msg, error=false) => {
     statusMsg.textContent = msg;
-    statusMsg.className = `status ${error ? "error" : "success"}`;
-    if(!error){
-      setTimeout(()=>{
-        statusMsg.textContent = "Fill at least one transformer's Ampere value.";
-        statusMsg.className = "status";
-      },2500);
-    }
-  };
-
-  const getDate = () => recordDate.value ? recordDate.value.replace(/-/g,"/") : defaultDisplayDate;
-
-  const getAmp = input => {
-    const val = parseFloat(input.value.trim());
-    return (!isNaN(val) && val >= 0) ? val : 0;
-  };
-
-  const hasInput = () => inputs.some(i => i.value.trim() !== "");
-
-  const clearFields = () => {
-    inputs.forEach(i => i.value = "");
-    recordDate.value = defaultInputDate;
+    statusMsg.className = `status ${error ? 'error' : 'success'}`;
   };
 
   editBtn.onclick = () => {
     const newOp = prompt("Enter Operator ID:", operator);
-    if(newOp && newOp.trim()){
+    if(newOp?.trim()) {
       operator = newOp.trim();
       userDisplay.textContent = operator;
     }
   };
 
   resetBtn.onclick = () => {
-    clearFields();
-    showStatus("Fields cleared.");
+    inputs.forEach(i => i.value = '');
+    showStatus('Fields cleared.');
   };
 
   submitBtn.onclick = () => {
-
-    if(!hasInput()){
-      showStatus("Please fill at least one Amp value.", true);
+    if(!inputs.some(i => i.value.trim())) {
+      showStatus('Please fill at least one Amp value.', true);
       return;
     }
 
-    const date = getDate();
-    const amps = inputs.map(getAmp);
-
-    const summary =
-`=== PEAK LOAD ===
-
-Substation: XYZ
-Date: ${date}
-Operator: ${operator}
-
-T1: 45 MVA | ${amps[0]} A
-T2: 45 MVA | ${amps[1]} A
-T3: 100 MVA | ${amps[2]} A
-
-Confirm submission?`;
-
-    if(!confirm(summary)){
-      showStatus("Submission cancelled.");
-      return;
-    }
+    const date = recordDate.value.replace(/-/g, '/');
+    const amps = inputs.map(i => parseFloat(i.value) || 0);
 
     submitBtn.disabled = true;
-    submitBtn.textContent = "Submitting...";
-
-    const form = document.createElement("form");
-    form.method = "POST";
+    const form = document.createElement('form');
+    form.method = 'POST';
     form.action = FORM_URL;
-    form.target = "hidden_google_iframe";
-    form.style.display = "none";
+    form.target = 'hidden_google_iframe';
 
     const fields = [
-      ["entry.3094480","XYZ"],
-      ["entry.1525214963",date],
-      ["entry.538973069",operator],
-      ["entry.1124170376","45"],
-      ["entry.120303341","45"],
-      ["entry.387659555","100"],
-      ["entry.1451736055",amps[0]],
-      ["entry.31550722",amps[1]],
-      ["entry.442388986",amps[2]]
+      ['entry.3094480','XYZ'],
+      ['entry.1525214963',date],
+      ['entry.538973069',operator],
+      ['entry.1124170376','45'],
+      ['entry.120303341','45'],
+      ['entry.387659555','100'],
+      ['entry.1451736055',amps[0]],
+      ['entry.31550722',amps[1]],
+      ['entry.442388986',amps[2]]
     ];
 
-    for(const [name,value] of fields){
-      const input = document.createElement("input");
-      input.type = "hidden";
+    fields.forEach(([name, value]) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
       input.name = name;
       input.value = value;
       form.appendChild(input);
-    }
+    });
 
     document.body.appendChild(form);
-
-    const done = () => {
+    iframe.onload = () => {
       submitBtn.disabled = false;
-      submitBtn.textContent = "Submit Peak Load";
-      clearFields();
-      showStatus("✅ Submitted successfully!");
+      submitBtn.textContent = 'Submit Peak Load';
       form.remove();
+      inputs.forEach(i => i.value = '');
+      showStatus('✅ Submitted successfully!');
     };
-
-    iframe.onload = done;
-    setTimeout(done,700);
 
     form.submit();
   };
-
-  inputs.forEach((input,index)=>{
-    input.addEventListener("keydown",e=>{
-      if(e.key==="Enter"){
-        e.preventDefault();
-        if(index < inputs.length-1){
-          inputs[index+1].focus();
-        } else {
-          submitBtn.click();
-        }
-      }
-    });
-  });
-
 })();
 </script>
-
 </body>
 </html>
+```
