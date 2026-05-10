@@ -3,358 +3,356 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>NEA | XYZ Substation Peak Load</title>
+  <title>NEA | XYZ Substation - Peak Load & Analytics</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      background: linear-gradient(135deg, #e0eef7 0%, #d4e2ec 100%);
+      background: linear-gradient(135deg, #e0eef7 0%, #cbdde9 100%);
       font-family: 'Inter', sans-serif;
-      padding: 2rem 1rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      padding: 1.5rem;
       min-height: 100vh;
     }
 
-    /* ── FORM CONTAINER ── */
-    .container {
-      max-width: 1150px;
-      width: 100%;
-      background: rgba(255,255,255,0.98);
-      border-radius: 32px;
-      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+    /* Main container */
+    .dashboard {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Glass card style */
+    .card-modern {
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 28px;
+      box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.2);
       overflow: hidden;
       margin-bottom: 2rem;
     }
 
     .header {
-      background: linear-gradient(105deg, #006633 0%, #008847 100%);
-      padding: 1.8rem 2.2rem;
-      color: #fff;
+      background: linear-gradient(105deg, #006633 0%, #008f47 100%);
+      padding: 1.5rem 2rem;
+      color: white;
       position: relative;
-      border-bottom: 1px solid rgba(255,255,255,0.2);
     }
-    .header h1 { font-size:1.9rem; font-weight:700; margin-bottom:.3rem; display:flex; align-items:center; gap:12px; }
-    .header h1 i { font-size:1.8rem; opacity:.95; }
-    .header .division { font-size:.85rem; opacity:.9; font-weight:500; }
-    .header .sub { font-size:.75rem; opacity:.8; margin-top:.3rem; display:flex; align-items:center; gap:6px; }
-
-    .form-body { padding:2rem 2.2rem; }
-
-    .info-bar {
-      background:#f8fbfe; border-radius:24px; padding:1rem 1.8rem;
-      display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center;
-      gap:1.2rem; margin-bottom:2rem; border:1px solid #e2edf5;
-    }
-    .info-item {
-      display:flex; align-items:center; gap:12px; font-size:.9rem;
-      background:white; padding:.5rem 1.4rem; border-radius:60px;
-      color:#1e4a6e; box-shadow:0 1px 3px rgba(0,0,0,.05); border:1px solid #e9f0f5;
-    }
-    .info-item i { color:#FF8C00; font-size:1rem; width:20px; }
-    .info-item strong { color:#006633; font-weight:700; }
-
-    .date-input {
-      border:1.5px solid #dce5ec; border-radius:40px; padding:.5rem 1rem;
-      font-size:.85rem; font-family:'Inter',monospace; outline:none; background:white;
-    }
-    .date-input:focus { border-color:#FF8C00; box-shadow:0 0 0 3px rgba(255,140,0,.15); }
-
-    .trans-grid {
-      display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
-      gap:1.8rem; margin-bottom:2.5rem;
-    }
-    .card {
-      background:#fff; border-radius:28px; padding:1.5rem;
-      border:1px solid #ecf3f9; box-shadow:0 4px 12px rgba(0,0,0,.02);
-      transition:all .25s;
-    }
-    .card:hover { border-color:#FF8C00; box-shadow:0 20px 30px -12px rgba(255,140,0,.12); transform:translateY(-3px); }
-    .card-title {
-      display:flex; justify-content:space-between; align-items:baseline;
-      margin-bottom:1.4rem; padding-bottom:.7rem; border-bottom:2px solid #eff4fa;
-    }
-    .card-title h3 { color:#006633; font-size:1.25rem; font-weight:700; display:flex; align-items:center; gap:8px; }
-    .card-title h3 i { font-size:1.2rem; color:#FF8C00; }
-    .mva-badge {
-      font-size:.7rem; background:linear-gradient(135deg,#fff3e6,#ffe8d9);
-      padding:.35rem .9rem; border-radius:40px; color:#c96200; font-weight:700;
-    }
-    .input-group label {
-      font-size:.7rem; font-weight:700; color:#2c627e; display:block;
-      margin-bottom:8px; text-transform:uppercase; letter-spacing:.5px;
-    }
-    .input-wrapper {
-      display:flex; align-items:center; background:#fbfdff;
-      border:1.5px solid #e2edf4; border-radius:60px;
-      padding:.2rem .2rem .2rem 1.2rem; transition:all .2s;
-    }
-    .input-wrapper:focus-within { border-color:#FF8C00; background:#fff; box-shadow:0 0 0 4px rgba(255,140,0,.1); }
-    .input-wrapper input {
-      border:none; outline:none; width:100%; padding:.85rem .3rem;
-      background:transparent; font-family:'Inter',monospace; font-size:1rem;
-      font-weight:500; color:#1a3d4f;
-    }
-    .input-wrapper input::placeholder { color:#b7cfdf; font-weight:400; font-size:.85rem; }
-    .unit {
-      background:#eef3fa; padding:.4rem 1rem; border-radius:50px;
-      font-size:.75rem; color:#006633; font-weight:700; margin-right:4px;
-    }
-    input[type=number]::-webkit-inner-spin-button,
-    input[type=number]::-webkit-outer-spin-button { display:none; }
-
-    .actions {
-      display:flex; gap:1.2rem; justify-content:center; margin:1.2rem 0 1rem;
-    }
-    .btn-primary, .btn-secondary {
-      border:none; border-radius:60px; padding:.9rem 2.1rem;
-      cursor:pointer; font-weight:700; font-size:.9rem; transition:all .2s;
-      display:inline-flex; align-items:center; gap:10px;
-    }
-    .btn-primary {
-      background:linear-gradient(95deg,#006633,#008f47); color:#fff;
-      box-shadow:0 4px 8px rgba(0,102,51,.25);
-    }
-    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 12px 20px -8px rgba(0,102,51,.4); }
-    .btn-secondary { background:white; border:1.5px solid #FF8C00; color:#006633; }
-    .btn-secondary:hover { background:#fff9f0; transform:translateY(-2px); }
-
-    .status {
-      margin-top:1.4rem; padding:.8rem; border-radius:50px;
-      text-align:center; font-size:.85rem; font-weight:500; background:#f2f6fa;
-    }
-    .status.success { background:#e3f7e8; color:#006633; }
-    .status.error { background:#ffece6; color:#bc4e2c; }
-
-    .footer {
-      background:#fbfefe; border-top:1px solid #eaf0f5;
-      padding:1rem; text-align:center; font-size:.7rem; color:#5e7e94;
-    }
+    .header h1 { font-size: 1.8rem; font-weight: 700; display: flex; align-items: center; gap: 12px; }
+    .header h1 i { font-size: 1.8rem; }
+    .header .division { font-size: 0.8rem; opacity: 0.9; margin-top: 4px; }
+    .header .sub { font-size: 0.75rem; opacity: 0.8; margin-top: 4px; display: flex; gap: 6px; align-items: center; }
 
     .logout-btn {
-      position:absolute; top:1.3rem; right:2rem;
-      background:rgba(255,255,255,.18); backdrop-filter:blur(8px);
-      border:1px solid rgba(255,255,255,.4); border-radius:40px;
-      padding:.5rem 1.3rem; font-family:'Inter',sans-serif;
-      font-weight:600; font-size:.8rem; color:white; cursor:pointer; transition:all .2s;
-      display:flex; align-items:center; gap:8px;
+      position: absolute;
+      top: 1.3rem;
+      right: 2rem;
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 40px;
+      padding: 0.5rem 1.3rem;
+      font-weight: 600;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: 0.2s;
+      color: white;
     }
-    .logout-btn:hover { background:rgba(255,255,255,.3); transform:scale(.97); }
+    .logout-btn:hover { background: rgba(255,255,255,0.35); transform: scale(0.96); }
 
-    /* ════════════════════════════════════════════
-       ANALYTICS SECTION
-    ════════════════════════════════════════════ */
-    .analytics-wrap {
-      max-width:1150px; width:100%;
+    .form-body { padding: 2rem; }
+    .info-bar {
+      background: #f8fbfe;
+      border-radius: 20px;
+      padding: 1rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      border: 1px solid #e2edf5;
+    }
+    .info-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: white;
+      padding: 0.4rem 1.3rem;
+      border-radius: 60px;
+      font-size: 0.85rem;
+      border: 1px solid #e9f0f5;
+    }
+    .info-item i { color: #FF8C00; }
+    .date-input {
+      border: 1.5px solid #dce5ec;
+      border-radius: 40px;
+      padding: 0.4rem 0.8rem;
+      font-family: 'Inter';
+      outline: none;
+    }
+    .date-input:focus { border-color: #FF8C00; box-shadow: 0 0 0 3px rgba(255,140,0,0.15); }
+
+    .trans-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .card {
+      background: white;
+      border-radius: 24px;
+      padding: 1.3rem;
+      border: 1px solid #ecf3f9;
+      transition: all 0.2s;
+    }
+    .card:hover { border-color: #FF8C00; transform: translateY(-3px); box-shadow: 0 12px 20px -10px rgba(255,140,0,0.15); }
+    .card-title {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #eff4fa;
+    }
+    .card-title h3 { color: #006633; font-size: 1.2rem; display: flex; gap: 8px; align-items: center; }
+    .mva-badge {
+      background: linear-gradient(135deg, #fff3e6, #ffe8d9);
+      padding: 0.25rem 0.8rem;
+      border-radius: 40px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #c96200;
+    }
+    .input-wrapper {
+      display: flex;
+      align-items: center;
+      border: 1.5px solid #e2edf4;
+      border-radius: 60px;
+      padding: 0.1rem 0.1rem 0.1rem 1rem;
+      background: #fbfdff;
+    }
+    .input-wrapper:focus-within { border-color: #FF8C00; box-shadow: 0 0 0 3px rgba(255,140,0,0.1); }
+    .input-wrapper input {
+      border: none;
+      outline: none;
+      width: 100%;
+      padding: 0.8rem 0.2rem;
+      background: transparent;
+      font-size: 1rem;
+    }
+    .unit {
+      background: #eef3fa;
+      padding: 0.3rem 0.9rem;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 0.7rem;
+      color: #006633;
+    }
+    .actions { display: flex; gap: 1rem; justify-content: center; margin: 1rem 0; }
+    .btn-primary, .btn-secondary {
+      border: none;
+      border-radius: 60px;
+      padding: 0.8rem 2rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-primary { background: linear-gradient(95deg, #006633, #008f47); color: white; box-shadow: 0 4px 10px rgba(0,102,51,0.3); }
+    .btn-primary:hover { transform: translateY(-2px); }
+    .btn-secondary { background: white; border: 1.5px solid #FF8C00; color: #006633; }
+    .status {
+      margin-top: 1rem;
+      padding: 0.7rem;
+      border-radius: 60px;
+      text-align: center;
+      font-size: 0.8rem;
+      background: #f2f6fa;
+    }
+    .status.success { background: #e3f7e8; color: #006633; }
+    .status.error { background: #ffece6; color: #bc4e2c; }
+    .footer {
+      background: #fbfefe;
+      border-top: 1px solid #eaf0f5;
+      padding: 0.8rem;
+      text-align: center;
+      font-size: 0.7rem;
+      color: #5e7e94;
     }
 
+    /* Analytics Section */
     .analytics-header {
-      background:linear-gradient(105deg,#004d26,#006633);
-      border-radius:24px 24px 0 0;
-      padding:1.4rem 2rem;
-      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+      background: linear-gradient(105deg, #004d26, #006633);
+      padding: 1.2rem 2rem;
+      border-radius: 28px 28px 0 0;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      align-items: center;
+      color: white;
     }
-    .analytics-header h2 { color:#fff; font-size:1.2rem; font-weight:700; display:flex; align-items:center; gap:10px; }
-    .analytics-header h2 i { color:#7dffb0; }
-    .aload-badge {
-      background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3);
-      border-radius:30px; padding:.4rem 1.1rem; color:#fff; font-size:.78rem; font-weight:600;
-      display:flex; align-items:center; gap:7px;
-    }
-    .aload-dot { width:7px; height:7px; border-radius:50%; background:#7dffb0; animation:blink 1.5s infinite; }
-    @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+    .analytics-body { padding: 1.8rem; background: white; border-radius: 0 0 28px 28px; border: 1px solid #e2edf5; border-top: none; }
 
-    .analytics-body {
-      background:#fff;
-      border:1px solid #dce8f0;
-      border-top:none;
-      border-radius:0 0 24px 24px;
-      padding:1.8rem;
-    }
-
-    /* FILTER BAR */
     .filter-bar {
-      background:#f5f9fc; border:1px solid #e0eaf2; border-radius:16px;
-      padding:1rem 1.4rem; display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;
-      margin-bottom:1.6rem;
+      background: #f5f9fc;
+      border-radius: 20px;
+      padding: 1rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-end;
+      margin-bottom: 1.5rem;
     }
-    .fg { display:flex; flex-direction:column; gap:5px; }
-    .fg label { font-size:.68rem; font-weight:700; color:#2c627e; text-transform:uppercase; letter-spacing:.5px; }
-    .fg select, .fg input[type=date] {
-      background:#fff; border:1.5px solid #d5e4ee; border-radius:10px;
-      padding:.55rem .9rem; font-size:.85rem; font-family:'Inter',sans-serif;
-      color:#1a3d4f; outline:none; cursor:pointer; min-width:130px;
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
     }
-    .fg select:focus,.fg input[type=date]:focus { border-color:#FF8C00; box-shadow:0 0 0 3px rgba(255,140,0,.1); }
-    .qbtns { display:flex; gap:6px; flex-wrap:wrap; }
-    .qb {
-      padding:.45rem .95rem; border-radius:20px; font-size:.75rem; font-weight:600;
-      cursor:pointer; background:transparent; border:1.5px solid #d5e4ee; color:#5e7e94;
-      transition:all .2s;
+    .filter-group label { font-size: 0.7rem; font-weight: 700; color: #2c627e; text-transform: uppercase; }
+    .filter-group input, .filter-group select {
+      padding: 0.5rem 0.9rem;
+      border-radius: 12px;
+      border: 1.5px solid #dce5ec;
+      background: white;
+      font-family: 'Inter';
     }
-    .qb:hover,.qb.on { border-color:#FF8C00; color:#FF8C00; background:rgba(255,140,0,.07); }
-    .fbtn {
-      padding:.55rem 1.3rem; border:none; border-radius:10px; font-weight:700;
-      font-size:.82rem; cursor:pointer; transition:all .2s;
-      display:flex; align-items:center; gap:7px;
+    .btn-sm {
+      padding: 0.5rem 1.2rem;
+      border-radius: 12px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
     }
-    .fbtn-green { background:#006633; color:#fff; }
-    .fbtn-green:hover { background:#008847; }
-    .fbtn-outline { background:#fff; border:1.5px solid #d5e4ee; color:#5e7e94; }
-    .fbtn-outline:hover { border-color:#FF8C00; color:#FF8C00; }
-    .fbtn-excel { background:#217346; color:#fff; }
-    .fbtn-excel:hover { background:#185a35; }
-    .fbtn-csv { background:#1565c0; color:#fff; }
-    .fbtn-csv:hover { background:#0d47a1; }
+    .btn-green { background: #006633; color: white; }
+    .btn-orange { background: #FF8C00; color: white; }
+    .btn-outline { background: white; border: 1.5px solid #dce5ec; color: #5e7e94; }
+    .btn-excel { background: #1f7b4d; color: white; }
 
-    /* STAT CARDS */
-    .stat-row {
-      display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-      gap:12px; margin-bottom:1.6rem;
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.8rem;
     }
-    .scard {
-      background:#f8fbfe; border:1px solid #e2edf5; border-radius:16px;
-      padding:1.1rem 1.2rem; position:relative; overflow:hidden;
+    .stat-card {
+      background: #f8fbfe;
+      border-radius: 20px;
+      padding: 1rem;
+      text-align: center;
+      border: 1px solid #e2edf5;
     }
-    .scard::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; border-radius:2px; }
-    .sc1::before{background:#006633} .sc2::before{background:#FF8C00}
-    .sc3::before{background:#1565c0} .sc4::before{background:#9c27b0}
-    .sc5::before{background:#d32f2f}
-    .sc-label { font-size:.68rem; font-weight:700; color:#5e7e94; text-transform:uppercase; letter-spacing:.5px; margin-bottom:.5rem; }
-    .sc-val { font-size:1.6rem; font-weight:800; color:#1a3d4f; font-family:'Courier New',monospace; }
-    .sc-sub { font-size:.7rem; color:#8aadbe; margin-top:.3rem; }
+    .stat-val { font-size: 1.8rem; font-weight: 800; color: #006633; font-family: monospace; }
+    .stat-label { font-size: 0.7rem; text-transform: uppercase; color: #5e7e94; letter-spacing: 0.5px; }
 
-    /* CHART SECTION */
-    .chart-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:1.6rem; }
-    @media(max-width:800px){.chart-grid{grid-template-columns:1fr}}
-    .chart-card {
-      background:#f8fbfe; border:1px solid #e2edf5; border-radius:16px; padding:1.2rem;
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
     }
-    .chart-title {
-      font-size:.75rem; font-weight:700; color:#006633; text-transform:uppercase;
-      letter-spacing:.6px; margin-bottom:1rem; display:flex; align-items:center; gap:8px;
+    .chart-box {
+      background: #f8fbfe;
+      border-radius: 20px;
+      padding: 1rem;
+      border: 1px solid #e2edf5;
     }
-    .chart-title i { color:#FF8C00; }
-    .chart-box { position:relative; }
+    .chart-box canvas { max-height: 260px; width: 100%; }
 
-    /* TABLE */
-    .tbl-wrap { overflow:auto; border-radius:12px; border:1px solid #e2edf5; }
-    table { width:100%; border-collapse:collapse; font-size:.82rem; }
-    thead tr { background:#006633; }
-    th { padding:10px 13px; text-align:left; color:#fff; font-weight:600; font-size:.72rem; text-transform:uppercase; letter-spacing:.5px; white-space:nowrap; }
-    td { padding:9px 13px; border-bottom:1px solid #edf3f8; color:#1a3d4f; white-space:nowrap; }
-    tbody tr:hover { background:#f0f8f3; }
-    tbody tr:last-child td { border-bottom:none; }
-    .peak-cell { font-weight:800; font-family:'Courier New',monospace; }
-    .pk-high { color:#d32f2f; }
-    .pk-med { color:#FF8C00; }
-    .pk-low { color:#006633; }
-    .status-badge {
-      padding:.25rem .75rem; border-radius:20px; font-size:.68rem; font-weight:700;
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: 16px;
+      border: 1px solid #e2edf5;
+      margin-top: 1rem;
     }
-    .sb-h { background:#fce4e4; color:#c62828; }
-    .sb-m { background:#fff3e0; color:#e65100; }
-    .sb-n { background:#e8f5e9; color:#2e7d32; }
-
-    /* PAGER */
-    .pager { display:flex; justify-content:space-between; align-items:center; margin-top:12px; flex-wrap:wrap; gap:8px; }
-    .pager-info { font-size:.75rem; color:#8aadbe; }
-    .pager-btns { display:flex; gap:5px; }
-    .pb {
-      padding:.4rem .9rem; border-radius:7px; font-size:.75rem; cursor:pointer;
-      border:1.5px solid #d5e4ee; background:#fff; color:#5e7e94; transition:all .2s;
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    th {
+      background: #006633;
+      color: white;
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 600;
+      cursor: pointer;
     }
-    .pb:hover:not(:disabled) { border-color:#FF8C00; color:#FF8C00; }
-    .pb:disabled { opacity:.35; cursor:default; }
-    .pb.on { background:#006633; border-color:#006633; color:#fff; }
-
-    /* LOADING */
-    .ldr { text-align:center; padding:30px; color:#8aadbe; font-size:.85rem; }
-    .spin {
-      width:30px; height:30px; border:3px solid #e0eaf2; border-top-color:#006633;
-      border-radius:50%; animation:spin .9s linear infinite; margin:0 auto 10px;
+    td { padding: 8px 12px; border-bottom: 1px solid #edf3f8; }
+    tr:hover { background: #f0f8f3; }
+    .pagination {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1rem;
+      flex-wrap: wrap;
     }
-    @keyframes spin{to{transform:rotate(360deg)}}
-
-    .nodata { text-align:center; padding:30px; color:#8aadbe; font-size:.85rem; }
-
-    /* Legend */
-    .legend { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:10px; font-size:.75rem; }
-    .leg { display:flex; align-items:center; gap:5px; color:#5e7e94; }
-    .leg-dot { width:10px; height:10px; border-radius:2px; }
-
-    @media(max-width:700px){
-      .form-body{padding:1.5rem}
-      .actions{flex-direction:column;align-items:center}
-      .btn-primary,.btn-secondary{width:100%;justify-content:center}
-      .analytics-body{padding:1rem}
+    .page-btn {
+      padding: 0.3rem 0.8rem;
+      border-radius: 8px;
+      border: 1px solid #dce5ec;
+      background: white;
+      cursor: pointer;
     }
-    @media(max-width:640px){
-      .logout-btn{top:.8rem;right:1rem;padding:.3rem 1rem;font-size:.7rem}
-      .header{padding-right:5rem}
+    .page-btn.active { background: #006633; color: white; border-color: #006633; }
+
+    @media (max-width: 700px) {
+      body { padding: 1rem; }
+      .form-body { padding: 1rem; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .chart-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
-<!-- ═══════════ FORM SECTION ═══════════ -->
-<div class="container">
+<div class="dashboard">
+
+<!-- ===================== FORM CARD ===================== -->
+<div class="card-modern">
   <div class="header">
     <h1><i class="fas fa-bolt"></i> XYZ Substation</h1>
     <div class="division">Nepal Electricity Authority · Butwal Grid Division (BGD)</div>
     <div class="sub"><i class="fas fa-chart-line"></i> Daily Peak Load Report</div>
     <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
   </div>
-
   <div class="form-body">
     <div class="info-bar">
-      <div class="info-item"><i class="fas fa-location-dot"></i> Substation: <strong>XYZ</strong></div>
+      <div class="info-item"><i class="fas fa-map-marker-alt"></i> Substation: <strong>XYZ</strong></div>
       <div class="info-item"><i class="far fa-calendar-alt"></i> Date: <input type="date" id="recordDate" class="date-input"></div>
-      <div class="info-item"><i class="fas fa-user-circle"></i> User ID: <strong id="userIdDisplay">DEEPAK</strong></div>
+      <div class="info-item"><i class="fas fa-user-circle"></i> User ID: <strong id="userIdDisplay">Loading...</strong></div>
     </div>
 
     <div class="trans-grid">
       <div class="card">
-        <div class="card-title">
-          <h3><i class="fas fa-microchip"></i> Transformer 01</h3>
-          <span class="mva-badge">45 MVA</span>
-        </div>
+        <div class="card-title"><h3><i class="fas fa-microchip"></i> Transformer 01</h3><span class="mva-badge">45 MVA</span></div>
         <div class="input-group">
           <label>⚡ Peak Load (Amperes)</label>
           <div class="input-wrapper">
-            <input type="number" id="t1_amps" placeholder="Enter current in Amps" step="any">
+            <input type="number" id="t1_amps" placeholder="Enter Amps" step="any">
             <span class="unit">A</span>
           </div>
         </div>
       </div>
       <div class="card">
-        <div class="card-title">
-          <h3><i class="fas fa-microchip"></i> Transformer 02</h3>
-          <span class="mva-badge">46 MVA</span>
-        </div>
+        <div class="card-title"><h3><i class="fas fa-microchip"></i> Transformer 02</h3><span class="mva-badge">46 MVA</span></div>
         <div class="input-group">
           <label>⚡ Peak Load (Amperes)</label>
           <div class="input-wrapper">
-            <input type="number" id="t2_amps" placeholder="Enter current in Amps" step="any">
+            <input type="number" id="t2_amps" placeholder="Enter Amps" step="any">
             <span class="unit">A</span>
           </div>
         </div>
       </div>
       <div class="card">
-        <div class="card-title">
-          <h3><i class="fas fa-microchip"></i> Transformer 03</h3>
-          <span class="mva-badge">47 MVA</span>
-        </div>
+        <div class="card-title"><h3><i class="fas fa-microchip"></i> Transformer 03</h3><span class="mva-badge">47 MVA</span></div>
         <div class="input-group">
           <label>⚡ Peak Load (Amperes)</label>
           <div class="input-wrapper">
-            <input type="number" id="t3_amps" placeholder="Enter current in Amps" step="any">
+            <input type="number" id="t3_amps" placeholder="Enter Amps" step="any">
             <span class="unit">A</span>
           </div>
         </div>
@@ -365,555 +363,423 @@
       <button id="submitBtn" class="btn-primary"><i class="fas fa-cloud-upload-alt"></i> Submit Peak Load</button>
       <button id="resetBtn" class="btn-secondary"><i class="fas fa-undo-alt"></i> Reset Fields</button>
     </div>
-
-    <div id="statusMsg" class="status">
-      <i class="fas fa-info-circle"></i> Fill at least one transformer's Ampere value.
-    </div>
+    <div id="statusMsg" class="status"><i class="fas fa-info-circle"></i> Fill at least one transformer value</div>
   </div>
-
-  <div class="footer">
-    <i class="fas fa-database"></i> NEA · Butwal Grid Division · Integrated Google Sheets
-  </div>
+  <div class="footer"><i class="fas fa-database"></i> NEA · Butwal Grid Division · Integrated with Google Sheets</div>
 </div>
 
-<!-- ═══════════ ANALYTICS SECTION ═══════════ -->
-<div class="analytics-wrap">
-
+<!-- ===================== ANALYTICS CARD ===================== -->
+<div class="card-modern">
   <div class="analytics-header">
-    <h2><i class="fas fa-chart-area"></i> XYZ Substation — Load Analytics</h2>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-      <div class="aload-badge"><span class="aload-dot"></span> Live Google Sheets</div>
-      <button class="fbtn fbtn-outline" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="loadData()">
-        <i class="fas fa-sync-alt"></i> Refresh
-      </button>
+    <h2 style="display: flex; gap: 10px;"><i class="fas fa-chart-pie"></i> XYZ Substation Load Analytics</h2>
+    <div style="display: flex; gap: 8px;">
+      <button id="refreshDataBtn" class="btn-sm btn-outline"><i class="fas fa-sync-alt"></i> Refresh</button>
     </div>
   </div>
-
   <div class="analytics-body">
 
-    <!-- FILTER BAR -->
+    <!-- Filter Row -->
     <div class="filter-bar">
-      <div class="fg">
-        <label>Date From</label>
-        <input type="date" id="aFrom">
-      </div>
-      <div class="fg">
-        <label>Date To</label>
-        <input type="date" id="aTo">
-      </div>
-      <div class="fg">
-        <label>Transformer</label>
-        <select id="aTrans">
-          <option value="peak">Peak (Max T1/T2/T3)</option>
-          <option value="t1">T-1 A Only</option>
-          <option value="t2">T-2 A Only</option>
-          <option value="t3">T-3 A Only</option>
-        </select>
-      </div>
-      <div class="fg">
-        <label>Submitted By</label>
-        <select id="aUser"><option value="">All Users</option></select>
-      </div>
-      <div class="fg">
-        <label>Quick Range</label>
-        <div class="qbtns">
-          <button class="qb" data-d="7">7D</button>
-          <button class="qb on" data-d="30">30D</button>
-          <button class="qb" data-d="90">3M</button>
-          <button class="qb" data-d="0">All</button>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
-        <button class="fbtn fbtn-green" onclick="applyFilter()"><i class="fas fa-filter"></i> Apply</button>
-        <button class="fbtn fbtn-outline" onclick="resetFilter()"><i class="fas fa-times"></i> Reset</button>
-        <button class="fbtn fbtn-excel" onclick="dlExcel()"><i class="fas fa-file-excel"></i> Excel</button>
-        <button class="fbtn fbtn-csv" onclick="dlCSV()"><i class="fas fa-file-csv"></i> CSV</button>
-      </div>
+      <div class="filter-group"><label>From Date</label><input type="date" id="filterFrom"></div>
+      <div class="filter-group"><label>To Date</label><input type="date" id="filterTo"></div>
+      <div class="filter-group"><label>User ID</label><select id="filterUser"><option value="">All Users</option></select></div>
+      <div class="filter-group"><label>Quick Range</label><div style="display: flex; gap: 5px;">
+        <button class="btn-sm btn-outline quick-range" data-days="7">7D</button>
+        <button class="btn-sm btn-outline quick-range active" data-days="30">30D</button>
+        <button class="btn-sm btn-outline quick-range" data-days="90">90D</button>
+        <button class="btn-sm btn-outline quick-range" data-days="0">All</button>
+      </div></div>
+      <div class="filter-group"><label>&nbsp;</label><button id="applyFilterBtn" class="btn-sm btn-green"><i class="fas fa-filter"></i> Apply</button></div>
+      <div class="filter-group"><label>&nbsp;</label><button id="exportExcelAnalytics" class="btn-sm btn-excel"><i class="fas fa-file-excel"></i> Export Excel</button></div>
     </div>
 
-    <!-- STAT CARDS -->
-    <div class="stat-row">
-      <div class="scard sc1">
-        <div class="sc-label">Total Records</div>
-        <div class="sc-val" id="stTotal">—</div>
-        <div class="sc-sub">XYZ entries</div>
-      </div>
-      <div class="scard sc2">
-        <div class="sc-label">Max Peak A</div>
-        <div class="sc-val" id="stMax">—</div>
-        <div class="sc-sub">Highest reading</div>
-      </div>
-      <div class="scard sc3">
-        <div class="sc-label">Avg Peak A</div>
-        <div class="sc-val" id="stAvg">—</div>
-        <div class="sc-sub">Mean value</div>
-      </div>
-      <div class="scard sc4">
-        <div class="sc-label">Min Peak A</div>
-        <div class="sc-val" id="stMin">—</div>
-        <div class="sc-sub">Lowest reading</div>
-      </div>
-      <div class="scard sc5">
-        <div class="sc-label">Submissions</div>
-        <div class="sc-val" id="stUsers">—</div>
-        <div class="sc-sub">Unique users</div>
-      </div>
+    <!-- Stats Cards -->
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-val" id="statTotal">0</div><div class="stat-label">Total Records</div></div>
+      <div class="stat-card"><div class="stat-val" id="statMaxPeak">0</div><div class="stat-label">Max Peak (A)</div></div>
+      <div class="stat-card"><div class="stat-val" id="statAvgPeak">0</div><div class="stat-label">Avg Peak (A)</div></div>
+      <div class="stat-card"><div class="stat-val" id="statMaxT1">0</div><div class="stat-label">Max T-1 (A)</div></div>
+      <div class="stat-card"><div class="stat-val" id="statUniqueUsers">0</div><div class="stat-label">Unique Users</div></div>
     </div>
 
-    <!-- CHARTS -->
+    <!-- Charts Grid -->
     <div class="chart-grid">
-
-      <!-- Line chart: T1, T2, T3 over time -->
-      <div class="chart-card">
-        <div class="chart-title"><i class="fas fa-wave-square"></i> Ampere Trend Over Time</div>
-        <div class="legend">
-          <span class="leg"><span class="leg-dot" style="background:#006633"></span>T-1 A</span>
-          <span class="leg"><span class="leg-dot" style="background:#FF8C00"></span>T-2 A</span>
-          <span class="leg"><span class="leg-dot" style="background:#1565c0"></span>T-3 A</span>
-          <span class="leg"><span class="leg-dot" style="background:#9c27b0"></span>Peak</span>
-        </div>
-        <div class="chart-box" style="height:260px">
-          <canvas id="cLine" role="img" aria-label="Line chart of T1 T2 T3 and peak ampere over time"></canvas>
-        </div>
-      </div>
-
-      <!-- Bar chart: peak per date -->
-      <div class="chart-card">
-        <div class="chart-title"><i class="fas fa-chart-bar"></i> Daily Peak Ampere</div>
-        <div class="chart-box" style="height:280px">
-          <canvas id="cBar" role="img" aria-label="Bar chart of daily peak ampere"></canvas>
-        </div>
-      </div>
-
-      <!-- Transformer avg comparison -->
-      <div class="chart-card">
-        <div class="chart-title"><i class="fas fa-balance-scale"></i> Transformer Average Comparison</div>
-        <div class="chart-box" style="height:220px">
-          <canvas id="cAvg" role="img" aria-label="Bar chart comparing average ampere of each transformer"></canvas>
-        </div>
-      </div>
-
-      <!-- Max per transformer doughnut -->
-      <div class="chart-card">
-        <div class="chart-title"><i class="fas fa-circle-notch"></i> Peak Load Share by Transformer</div>
-        <div class="chart-box" style="height:220px">
-          <canvas id="cDonut" role="img" aria-label="Doughnut chart of peak load share by transformer"></canvas>
-        </div>
-      </div>
-
+      <div class="chart-box"><h4 style="margin-bottom: 10px; color:#006633;"><i class="fas fa-chart-line"></i> Ampere Trend (T1,T2,T3)</h4><canvas id="lineChart"></canvas></div>
+      <div class="chart-box"><h4 style="margin-bottom: 10px; color:#006633;"><i class="fas fa-chart-bar"></i> Daily Peak Ampere</h4><canvas id="barChart"></canvas></div>
+      <div class="chart-box"><h4 style="margin-bottom: 10px; color:#006633;"><i class="fas fa-chart-simple"></i> Average per Transformer</h4><canvas id="avgChart"></canvas></div>
+      <div class="chart-box"><h4 style="margin-bottom: 10px; color:#006633;"><i class="fas fa-chart-pie"></i> Max Load Share</h4><canvas id="doughnutChart"></canvas></div>
     </div>
 
-    <!-- DATA TABLE -->
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-      <div style="font-size:.78rem;font-weight:700;color:#006633;text-transform:uppercase;letter-spacing:.5px">
-        <i class="fas fa-table"></i> XYZ Records
-      </div>
-      <span style="font-size:.75rem;color:#8aadbe" id="rowCount"></span>
-    </div>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr>
-          <th onclick="sortBy('_ds')">Date ↕</th>
-          <th>User</th>
-          <th onclick="sortBy('_t1')">T-1 A ↕</th>
-          <th onclick="sortBy('_t2')">T-2 A ↕</th>
-          <th onclick="sortBy('_t3')">T-3 A ↕</th>
-          <th>T-1 MVA</th><th>T-2 MVA</th><th>T-3 MVA</th>
-          <th onclick="sortBy('_peak')">Peak A ↕</th>
-          <th>Load Bar</th>
-          <th>Status</th>
-        </tr></thead>
-        <tbody id="tblBody">
-          <tr><td colspan="11"><div class="ldr"><div class="spin"></div>Fetching XYZ data…</div></td></tr>
-        </tbody>
+    <!-- Data Table -->
+    <h4 style="margin: 1rem 0 0.5rem; color:#006633;"><i class="fas fa-table"></i> Historical Records (XYZ Only)</h4>
+    <div class="table-wrapper">
+      <table id="dataTable">
+        <thead>
+          <tr><th>Date</th><th>User ID</th><th>T1 A</th><th>T2 A</th><th>T3 A</th><th>Peak A</th><th>T1 MVA</th><th>T2 MVA</th><th>T3 MVA</th></tr>
+        </thead>
+        <tbody id="tableBody"><tr><td colspan="9" style="text-align:center;">Loading data...</td></tr>
+      </tbody>
       </table>
     </div>
-    <div class="pager">
-      <div class="pager-info" id="pgInfo"></div>
-      <div class="pager-btns" id="pgBtns"></div>
-    </div>
-
-  </div><!-- /analytics-body -->
-</div><!-- /analytics-wrap -->
+    <div class="pagination" id="pagination"></div>
+  </div>
+</div>
+</div>
 
 <iframe name="hidden_google_iframe" style="display:none;"></iframe>
 
 <script>
-/* ══════════════════════════════════════════════
-   FIREBASE AUTH (same as original)
-══════════════════════════════════════════════ */
-(function(){
-  const s=document.createElement('script');
-  s.type='module';
-  s.textContent=`
-    import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import{getAuth,onAuthStateChanged,signOut}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    const app=initializeApp({apiKey:"AIzaSyAMs4MtFfDVIFntC9hPYH_MClW1VsIJTZo",authDomain:"gridlogin.firebaseapp.com",databaseURL:"https://gridlogin-default-rtdb.firebaseio.com/",projectId:"gridlogin",storageBucket:"gridlogin.firebasestorage.app",messagingSenderId:"860236561452",appId:"1:860236561452:web:3b63bb006b0858b3426589"});
-    const auth=getAuth(app);
-    window.__firebaseAuth=auth; window.__firebaseSignOut=signOut;
-    onAuthStateChanged(auth,(user)=>{
-      if(!user){window.location.href="index.html";return;}
-      const name=(user.email||"User").split('@')[0].toUpperCase();
-      localStorage.setItem("userEmail",user.email);
-      localStorage.setItem("authenticatedUserId",name);
-      window.currentUserId=name;
-      const sp=document.getElementById("userIdDisplay");
-      if(sp)sp.textContent=name;
+// ==================== FIREBASE AUTHENTICATION ====================
+(function() {
+  const script = document.createElement('script');
+  script.type = 'module';
+  script.textContent = `
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    const config = {
+      apiKey: "AIzaSyAMs4MtFfDVIFntC9hPYH_MClW1VsIJTZo",
+      authDomain: "gridlogin.firebaseapp.com",
+      databaseURL: "https://gridlogin-default-rtdb.firebaseio.com/",
+      projectId: "gridlogin",
+      storageBucket: "gridlogin.firebasestorage.app",
+      messagingSenderId: "860236561452",
+      appId: "1:860236561452:web:3b63bb006b0858b3426589"
+    };
+    const app = initializeApp(config);
+    const auth = getAuth(app);
+    onAuthStateChanged(auth, (user) => {
+      if (!user) { window.location.href = "index.html"; return; }
+      const name = user.email.split('@')[0].toUpperCase();
+      localStorage.setItem("userId", name);
+      const span = document.getElementById("userIdDisplay");
+      if (span) span.textContent = name;
     });
-    window.logout=function(){signOut(auth).then(()=>{window.location.href="index.html";}).catch(()=>{window.location.href="index.html";});};
+    window.logout = () => signOut(auth).then(() => { window.location.href = "index.html"; });
   `;
-  document.head.appendChild(s);
+  document.head.appendChild(script);
 })();
 
-/* ══════════════════════════════════════════════
-   FORM SUBMISSION (same as original)
-══════════════════════════════════════════════ */
-(function(){
-  const $=id=>document.getElementById(id);
-  const FORM_URL="https://docs.google.com/forms/d/e/1FAIpQLScG9F5CDmCm8k6CIckSfJMxzIUQI8io0942FhyO-6B4lJT7EQ/formResponse";
-  const recordDate=$("recordDate"),submitBtn=$("submitBtn"),resetBtn=$("resetBtn"),statusMsg=$("statusMsg"),userIdSpan=$("userIdDisplay");
-  const t1=$("t1_amps"),t2=$("t2_amps"),t3=$("t3_amps"),inputs=[t1,t2,t3];
-  const iframe=document.querySelector("iframe[name='hidden_google_iframe']");
-  const today=new Date();
-  const def=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-  if(recordDate)recordDate.value=def;
-  const showStatus=(msg,err=false)=>{
-    if(!statusMsg)return;
-    statusMsg.innerHTML=`<i class="fas ${err?'fa-exclamation-triangle':'fa-check-circle'}"></i> ${msg}`;
-    statusMsg.className=`status ${err?'error':'success'}`;
-    if(!err)setTimeout(()=>{statusMsg.innerHTML='<i class="fas fa-info-circle"></i> Fill at least one transformer\'s Ampere value.';statusMsg.className='status';},2800);
+// ==================== FORM SUBMISSION ====================
+(function() {
+  const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScG9F5CDmCm8k6CIckSfJMxzIUQI8io0942FhyO-6B4lJT7EQ/formResponse";
+  const submitBtn = document.getElementById("submitBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const statusDiv = document.getElementById("statusMsg");
+  const t1 = document.getElementById("t1_amps");
+  const t2 = document.getElementById("t2_amps");
+  const t3 = document.getElementById("t3_amps");
+  const recordDate = document.getElementById("recordDate");
+  
+  const today = new Date().toISOString().split('T')[0];
+  recordDate.value = today;
+  
+  const showStatus = (msg, isError = false) => {
+    statusDiv.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`;
+    statusDiv.className = `status ${isError ? 'error' : 'success'}`;
+    if (!isError) setTimeout(() => {
+      statusDiv.innerHTML = '<i class="fas fa-info-circle"></i> Fill at least one transformer\'s Ampere value.';
+      statusDiv.className = "status";
+    }, 3000);
   };
-  const getDate=()=>(recordDate&&recordDate.value?recordDate.value:def).replace(/-/g,'/');
-  const getAmp=inp=>{const v=parseFloat(inp.value.trim());return(!isNaN(v)&&v>=0)?v:0;};
-  const hasInput=()=>inputs.some(inp=>inp&&inp.value.trim()!=='');
-  const clear=()=>{inputs.forEach(inp=>{if(inp)inp.value='';});if(recordDate)recordDate.value=def;};
-  const getOp=()=>{
-    if(userIdSpan&&userIdSpan.textContent&&userIdSpan.textContent!=='DEEPAK')return userIdSpan.textContent.trim();
-    return localStorage.getItem('authenticatedUserId')||'NEA_OPERATOR';
+  
+  const getOperator = () => {
+    const span = document.getElementById("userIdDisplay");
+    return span ? span.textContent : "OPERATOR";
   };
-  if(submitBtn)submitBtn.onclick=()=>{
-    if(!hasInput()){showStatus('Please fill at least one Amp value.',true);return;}
-    const date=getDate(),op=getOp(),amps=inputs.map(i=>getAmp(i));
-    if(!confirm(`⚡ PEAK LOAD SUMMARY ⚡\n\n📍 Substation: XYZ\n📅 Date: ${date}\n👤 User: ${op}\n\n🔹 T1 (45 MVA): ${amps[0]} A\n🔹 T2 (46 MVA): ${amps[1]} A\n🔹 T3 (47 MVA): ${amps[2]} A\n\n✅ Confirm submission?`)){showStatus('Cancelled.');return;}
-    submitBtn.disabled=true;submitBtn.innerHTML='<i class="fas fa-spinner fa-pulse"></i> Submitting...';
-    const form=document.createElement('form');
-    form.method='POST';form.action=FORM_URL;form.target='hidden_google_iframe';form.style.display='none';
-    [["entry.3094480","XYZ"],["entry.1525214963",date],["entry.538973069",op],["entry.1124170376","45"],["entry.120303341","46"],["entry.387659555","47"],["entry.1451736055",amps[0]],["entry.31550722",amps[1]],["entry.442388986",amps[2]]].forEach(([n,v])=>{const i=document.createElement('input');i.type='hidden';i.name=n;i.value=v;form.appendChild(i);});
+  
+  submitBtn.onclick = () => {
+    const amps = [t1.value, t2.value, t3.value].map(v => parseFloat(v) || 0);
+    if (amps.every(a => a === 0)) {
+      showStatus("Please fill at least one Ampere value.", true);
+      return;
+    }
+    const date = recordDate.value.replace(/-/g, "/");
+    const operator = getOperator();
+    if (!confirm(`⚡ Confirm Submission\nDate: ${date}\nUser: ${operator}\nT1: ${amps[0]} A\nT2: ${amps[1]} A\nT3: ${amps[2]} A`)) return;
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Submitting...';
+    
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = FORM_URL;
+    form.target = "hidden_google_iframe";
+    form.style.display = "none";
+    const fields = [
+      ["entry.3094480", "XYZ"],
+      ["entry.1525214963", date],
+      ["entry.538973069", operator],
+      ["entry.1124170376", "45"],
+      ["entry.120303341", "46"],
+      ["entry.387659555", "47"],
+      ["entry.1451736055", amps[0]],
+      ["entry.31550722", amps[1]],
+      ["entry.442388986", amps[2]]
+    ];
+    fields.forEach(([name, val]) => {
+      const inp = document.createElement("input");
+      inp.type = "hidden";
+      inp.name = name;
+      inp.value = val;
+      form.appendChild(inp);
+    });
     document.body.appendChild(form);
-    let done=false;
-    const fin=()=>{if(done)return;done=true;submitBtn.disabled=false;submitBtn.innerHTML='<i class="fas fa-cloud-upload-alt"></i> Submit Peak Load';clear();showStatus('✅ Submitted! Data synced.');if(form.parentNode)form.remove();setTimeout(loadData,1500);};
-    if(iframe)iframe.onload=fin;
-    setTimeout(fin,1300);form.submit();
+    const cleanup = () => {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Submit Peak Load';
+      t1.value = t2.value = t3.value = "";
+      showStatus("✅ Submitted successfully! Data synced.");
+      if (form.parentNode) form.remove();
+      if (typeof loadSheetData === "function") setTimeout(loadSheetData, 1500);
+    };
+    const iframe = document.querySelector("iframe");
+    if (iframe) iframe.onload = cleanup;
+    setTimeout(cleanup, 1500);
+    form.submit();
   };
-  if(resetBtn)resetBtn.onclick=()=>{clear();showStatus('Fields reset.');};
-  inputs.forEach((inp,i)=>{if(inp)inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();if(i<inputs.length-1&&inputs[i+1])inputs[i+1].focus();else if(submitBtn)submitBtn.click();}});});
-  const lb=document.getElementById('logoutBtn');
-  if(lb)lb.onclick=e=>{e.preventDefault();if(typeof window.logout==='function')window.logout();else window.location.href='index.html';};
+  
+  resetBtn.onclick = () => {
+    t1.value = t2.value = t3.value = "";
+    showStatus("Fields cleared.");
+  };
 })();
 
-/* ══════════════════════════════════════════════
-   ANALYTICS ENGINE
-══════════════════════════════════════════════ */
-const CSV_URL='https://docs.google.com/spreadsheets/d/1u268xpWSLvzQQeOhana79NERbkVtu2K2UDG17xR4IAY/export?format=csv';
-const PROXIES=[
-  u=>'https://corsproxy.io/?url='+encodeURIComponent(u),
-  u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),
-  u=>'https://thingproxy.freeboard.io/fetch/'+u,
-];
+// ==================== GOOGLE SHEETS DATA FETCH & ANALYTICS ====================
+// Using published CSV endpoint (public access required)
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1u268xpWSLvzQQeOhana79NERbkVtu2K2UDG17xR4IAY/export?format=csv";
 
-let raw=[],filtered=[],sortKey='_ds',sortAsc=false,page=1;
-const PER=20;
-let charts={};
+let allRecords = [];      // All XYZ records
+let filteredRecords = [];
+let charts = {};
+let currentPage = 1;
+const rowsPerPage = 15;
 
-/* ── FETCH ── */
-async function loadData(){
-  setLoading(true);
-  let err='';
-  for(const px of PROXIES){
-    const url=px(CSV_URL);
-    const host=url.split('/')[2];
-    setLoadMsg('Connecting via '+host+'…');
-    try{
-      const r=await fetch(url);
-      if(!r.ok)throw new Error('HTTP '+r.status);
-      const t=await r.text();
-      if(!t||t.trim().startsWith('<'))throw new Error('Got HTML not CSV');
-      ingest(t);return;
-    }catch(e){err=e.message;}
+// Fetch data with CORS proxy fallback
+async function loadSheetData() {
+  document.getElementById("tableBody").innerHTML = '<tr><td colspan="9"><i class="fas fa-spinner fa-pulse"></i> Fetching from Google Sheets...</td></tr>';
+  const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(SHEET_CSV_URL);
+  try {
+    const response = await fetch(proxyUrl);
+    if (!response.ok) throw new Error("Network error");
+    const csvText = await response.text();
+    parseCSV(csvText);
+  } catch (err) {
+    console.error(err);
+    document.getElementById("tableBody").innerHTML = '<tr><td colspan="9">⚠️ Failed to load data. Make sure Google Sheet is published as CSV (File > Share > Publish to web).</td></tr>';
   }
-  setLoading(false);
-  document.getElementById('tblBody').innerHTML=
-    '<tr><td colspan="11" class="nodata">⚠ Could not fetch data. Make sheet public (Share → Anyone with link → Viewer). Error: '+err+'</td></tr>';
 }
 
-function setLoading(on){
-  if(on)document.getElementById('tblBody').innerHTML=
-    '<tr><td colspan="11"><div class="ldr"><div class="spin"></div><span id="ldMsg">Fetching…</span></div></td></tr>';
-}
-function setLoadMsg(m){const el=document.getElementById('ldMsg');if(el)el.textContent=m;}
-
-/* ── PARSE CSV ── */
-function csvRow(line){
-  let res=[],cur='',q=false;
-  for(const c of line){if(c==='"'){q=!q;}else if(c===','&&!q){res.push(cur);cur='';}else cur+=c;}
-  res.push(cur);return res.map(s=>s.trim());
-}
-
-function ingest(csv){
-  const lines=csv.trim().split('\n');
-  const hdrs=csvRow(lines[0]);
-  raw=[];
-  for(let i=1;i<lines.length;i++){
-    const v=csvRow(lines[i]);
-    if(v.length<3)continue;
-    const o={};hdrs.forEach((h,j)=>o[h]=v[j]||'');
-    /* ── FILTER: XYZ substation only ── */
-    if((o['Substation Name']||'').trim().toUpperCase()!=='XYZ')continue;
-    const ds=(o['Date']||'').replace(/\//g,'-').slice(0,10);
-    const dt=new Date(ds);if(isNaN(dt))continue;
-    o._date=dt;o._ds=ds;
-    o._user=(o['User ID']||'').trim();
-    o._t1=parseFloat(o['T-1 A'])||0;
-    o._t2=parseFloat(o['T-2 A'])||0;
-    o._t3=parseFloat(o['T-3 A'])||0;
-    o._mva1=parseFloat(o['T-1 MVA'])||0;
-    o._mva2=parseFloat(o['T-2 MVA'])||0;
-    o._mva3=parseFloat(o['T-2 MVA 2'])||parseFloat(o['T-3 MVA'])||0;
-    o._peak=Math.max(o._t1,o._t2,o._t3);
-    raw.push(o);
+function parseCSV(csv) {
+  const lines = csv.split(/\r?\n/);
+  if (lines.length < 2) return;
+  const headers = lines[0].split(",").map(h => h.replace(/"/g, "").trim());
+  const data = [];
+  for (let i = 1; i < lines.length; i++) {
+    if (!lines[i].trim()) continue;
+    const values = parseCSVRow(lines[i]);
+    const row = {};
+    headers.forEach((h, idx) => row[h] = values[idx] || "");
+    const substation = (row["Substation Name"] || "").trim().toUpperCase();
+    if (substation !== "XYZ") continue;
+    const dateStr = (row["Date"] || "").replace(/\//g, "-");
+    const dateObj = new Date(dateStr);
+    if (isNaN(dateObj)) continue;
+    const t1a = parseFloat(row["T-1 A"]) || 0;
+    const t2a = parseFloat(row["T-2 A"]) || 0;
+    const t3a = parseFloat(row["T-3 A"]) || 0;
+    const mva1 = parseFloat(row["T-1 MVA"]) || 0;
+    const mva2 = parseFloat(row["T-2 MVA"]) || 0;
+    const mva3 = parseFloat(row["T-2 MVA 2"] || row["T-3 MVA"]) || 0;
+    data.push({
+      date: dateStr,
+      dateObj: dateObj,
+      user: (row["User ID"] || "").trim(),
+      t1a, t2a, t3a,
+      mva1, mva2, mva3,
+      peak: Math.max(t1a, t2a, t3a)
+    });
   }
-  raw.sort((a,b)=>a._date-b._date);
-  populateUsers();
-  setQuick(30);
-  applyFilter();
+  data.sort((a,b) => a.dateObj - b.dateObj);
+  allRecords = data;
+  populateUserFilter();
+  applyFilters();
 }
 
-/* ── DROPDOWNS ── */
-function populateUsers(){
-  const sel=document.getElementById('aUser');
-  const users=[...new Set(raw.map(r=>r._user))].filter(Boolean).sort();
-  sel.innerHTML='<option value="">All Users</option>';
-  users.forEach(u=>{const o=document.createElement('option');o.value=u;o.textContent=u;sel.appendChild(o);});
+function parseCSVRow(line) {
+  const result = [];
+  let inQuote = false;
+  let current = "";
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      inQuote = !inQuote;
+    } else if (ch === ',' && !inQuote) {
+      result.push(current);
+      current = "";
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current);
+  return result.map(v => v.replace(/^"|"$/g, ""));
 }
 
-/* ── QUICK RANGE ── */
-function setQuick(days){
-  document.querySelectorAll('.qb').forEach(b=>b.classList.toggle('on',+b.dataset.d===days));
-  if(!days){document.getElementById('aFrom').value='';document.getElementById('aTo').value='';return;}
-  const to=new Date(),from=new Date();from.setDate(from.getDate()-days);
-  document.getElementById('aTo').value=to.toISOString().slice(0,10);
-  document.getElementById('aFrom').value=from.toISOString().slice(0,10);
-}
-document.querySelectorAll('.qb').forEach(b=>b.addEventListener('click',()=>{setQuick(+b.dataset.d);applyFilter();}));
-
-/* ── FILTER ── */
-function getAmpVal(r){
-  const t=document.getElementById('aTrans').value;
-  if(t==='t1')return r._t1;if(t==='t2')return r._t2;if(t==='t3')return r._t3;return r._peak;
+function populateUserFilter() {
+  const users = [...new Set(allRecords.map(r => r.user).filter(u => u))];
+  const select = document.getElementById("filterUser");
+  select.innerHTML = '<option value="">All Users</option>';
+  users.forEach(u => {
+    const opt = document.createElement("option");
+    opt.value = u;
+    opt.textContent = u;
+    select.appendChild(opt);
+  });
 }
 
-function applyFilter(){
-  const from=document.getElementById('aFrom').value;
-  const to=document.getElementById('aTo').value;
-  const user=document.getElementById('aUser').value;
-  filtered=raw.filter(r=>{
-    if(from&&r._ds<from)return false;
-    if(to&&r._ds>to)return false;
-    if(user&&r._user!==user)return false;
+function applyFilters() {
+  const fromDate = document.getElementById("filterFrom").value;
+  const toDate = document.getElementById("filterTo").value;
+  const userId = document.getElementById("filterUser").value;
+  
+  filteredRecords = allRecords.filter(rec => {
+    if (fromDate && rec.date < fromDate) return false;
+    if (toDate && rec.date > toDate) return false;
+    if (userId && rec.user !== userId) return false;
     return true;
   });
-  page=1;updateStats();renderTable();renderCharts();
+  currentPage = 1;
+  updateStatistics();
+  renderTable();
+  renderCharts();
 }
 
-function resetFilter(){
-  document.getElementById('aUser').value='';
-  document.getElementById('aTrans').value='peak';
-  setQuick(30);applyFilter();
-}
-document.getElementById('aTrans').addEventListener('change',applyFilter);
-
-/* ── STATS ── */
-function updateStats(){
-  const amps=filtered.map(r=>getAmpVal(r));
-  document.getElementById('stTotal').textContent=amps.length;
-  document.getElementById('stMax').textContent=amps.length?Math.max(...amps).toFixed(0):'—';
-  document.getElementById('stAvg').textContent=amps.length?(amps.reduce((a,b)=>a+b,0)/amps.length).toFixed(1):'—';
-  document.getElementById('stMin').textContent=amps.length?Math.min(...amps).toFixed(0):'—';
-  document.getElementById('stUsers').textContent=new Set(filtered.map(r=>r._user)).size;
+function updateStatistics() {
+  const peaks = filteredRecords.map(r => r.peak);
+  const total = filteredRecords.length;
+  const maxPeak = peaks.length ? Math.max(...peaks) : 0;
+  const avgPeak = peaks.length ? (peaks.reduce((a,b)=>a+b,0)/peaks.length).toFixed(1) : 0;
+  const maxT1 = filteredRecords.length ? Math.max(...filteredRecords.map(r=>r.t1a)) : 0;
+  const uniqueUsers = new Set(filteredRecords.map(r=>r.user)).size;
+  document.getElementById("statTotal").innerText = total;
+  document.getElementById("statMaxPeak").innerText = maxPeak;
+  document.getElementById("statAvgPeak").innerText = avgPeak;
+  document.getElementById("statMaxT1").innerText = maxT1;
+  document.getElementById("statUniqueUsers").innerText = uniqueUsers;
 }
 
-/* ── TABLE ── */
-function sortBy(k){
-  sortAsc=sortKey===k?!sortAsc:false;sortKey=k;
-  filtered.sort((a,b)=>{const A=a[k],B=b[k];if(typeof A==='number')return sortAsc?A-B:B-A;return sortAsc?String(A).localeCompare(B):String(B).localeCompare(A);});
-  page=1;renderTable();
-}
-
-function renderTable(){
-  const body=document.getElementById('tblBody');
-  if(!filtered.length){
-    body.innerHTML='<tr><td colspan="11" class="nodata">No records match the selected filters.</td></tr>';
-    document.getElementById('rowCount').textContent='';
-    document.getElementById('pgInfo').textContent='';
-    document.getElementById('pgBtns').innerHTML='';
+function renderTable() {
+  const tbody = document.getElementById("tableBody");
+  const start = (currentPage-1)*rowsPerPage;
+  const pageData = filteredRecords.slice(start, start+rowsPerPage);
+  if (pageData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9">No records found.</td></tr>';
+    document.getElementById("pagination").innerHTML = "";
     return;
   }
-  const maxPk=Math.max(...filtered.map(r=>r._peak));
-  const pages=Math.ceil(filtered.length/PER);
-  page=Math.min(page,pages);
-  const slice=filtered.slice((page-1)*PER,page*PER);
-  document.getElementById('rowCount').textContent=filtered.length+' XYZ records shown';
-
-  body.innerHTML=slice.map(r=>{
-    const pk=r._peak,ratio=maxPk?pk/maxPk:0;
-    const col=ratio>0.8?'#d32f2f':ratio>0.5?'#FF8C00':'#006633';
-    const pkClass=ratio>0.8?'pk-high':ratio>0.5?'pk-med':'pk-low';
-    const badge=ratio>0.8?'<span class="status-badge sb-h">High</span>':ratio>0.5?'<span class="status-badge sb-m">Medium</span>':'<span class="status-badge sb-n">Normal</span>';
-    const barW=Math.round(ratio*64)+4;
-    return `<tr>
-      <td style="font-family:'Courier New';color:#5e7e94;font-size:.8rem">${r._ds}</td>
-      <td style="font-weight:600;color:#1a3d4f">${r._user}</td>
-      <td style="font-family:'Courier New'">${r._t1||'—'}</td>
-      <td style="font-family:'Courier New'">${r._t2||'—'}</td>
-      <td style="font-family:'Courier New'">${r._t3||'—'}</td>
-      <td style="color:#8aadbe">${r._mva1||'—'}</td>
-      <td style="color:#8aadbe">${r._mva2||'—'}</td>
-      <td style="color:#8aadbe">${r._mva3||'—'}</td>
-      <td class="peak-cell ${pkClass}">${pk}</td>
-      <td><div style="display:flex;align-items:center;gap:6px"><div style="width:${barW}px;height:5px;border-radius:3px;background:${col}"></div></div></td>
-      <td>${badge}</td>
-    </tr>`;
-  }).join('');
-
-  // pager
-  document.getElementById('pgInfo').textContent=`Page ${page} of ${pages} · ${filtered.length} records`;
-  const pb=document.getElementById('pgBtns');pb.innerHTML='';
-  const mk=(lbl,pg2,act)=>{
-    const b=document.createElement('button');b.className='pb'+(act?' on':'');
-    b.textContent=lbl;b.disabled=act;b.onclick=()=>{page=pg2;renderTable();};pb.appendChild(b);
-  };
-  mk('‹',page-1,page===1);
-  const s=Math.max(1,page-2),e=Math.min(pages,page+2);
-  for(let p2=s;p2<=e;p2++)mk(p2,p2,p2===page);
-  mk('›',page+1,page===pages);
-}
-
-/* ── CHARTS ── */
-function dc(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
-
-function renderCharts(){
-  renderLine();renderBar();renderAvg();renderDonut();
-}
-
-function renderLine(){
-  dc('line');
-  const labels=[...new Set(filtered.map(r=>r._ds))].sort();
-  const agg=(fn)=>labels.map(d=>{
-    const rows=filtered.filter(r=>r._ds===d);
-    return rows.length?Math.max(...rows.map(fn)):null;
+  tbody.innerHTML = pageData.map(r => `
+    <tr>
+      <td>${r.date}</td><td>${r.user}</td><td>${r.t1a}</td><td>${r.t2a}</td><td>${r.t3a}</td>
+      <td><strong>${r.peak}</strong></td><td>${r.mva1}</td><td>${r.mva2}</td><td>${r.mva3}</td>
+    </tr>
+  `).join("");
+  
+  const totalPages = Math.ceil(filteredRecords.length / rowsPerPage);
+  let pagHtml = `<span>Page ${currentPage} of ${totalPages || 1}</span><div>`;
+  for (let i=1; i<=Math.min(totalPages, 5); i++) {
+    pagHtml += `<button class="page-btn ${i===currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+  }
+  if (totalPages > 5) pagHtml += `<span>...</span><button class="page-btn" data-page="${totalPages}">${totalPages}</button>`;
+  pagHtml += `<button class="page-btn" data-page="${currentPage+1}" ${currentPage===totalPages ? 'disabled' : ''}>Next</button></div>`;
+  document.getElementById("pagination").innerHTML = pagHtml;
+  document.querySelectorAll(".page-btn").forEach(btn => {
+    btn.onclick = () => { if(btn.dataset.page) { currentPage = parseInt(btn.dataset.page); renderTable(); } };
   });
-  charts.line=new Chart(document.getElementById('cLine'),{
-    type:'line',
-    data:{labels,datasets:[
-      {label:'T-1 A',data:agg(r=>r._t1),borderColor:'#006633',backgroundColor:'rgba(0,102,51,.08)',fill:true,tension:0.35,pointRadius:4,pointBackgroundColor:'#006633',borderWidth:2},
-      {label:'T-2 A',data:agg(r=>r._t2),borderColor:'#FF8C00',backgroundColor:'rgba(255,140,0,.08)',fill:true,tension:0.35,pointRadius:4,pointBackgroundColor:'#FF8C00',borderWidth:2},
-      {label:'T-3 A',data:agg(r=>r._t3),borderColor:'#1565c0',backgroundColor:'rgba(21,101,192,.08)',fill:true,tension:0.35,pointRadius:4,pointBackgroundColor:'#1565c0',borderWidth:2},
-      {label:'Peak',data:agg(r=>r._peak),borderColor:'#9c27b0',borderDash:[5,4],backgroundColor:'transparent',tension:0.35,pointRadius:3,borderWidth:1.5},
+}
+
+function renderCharts() {
+  const dates = [...new Set(filteredRecords.map(r=>r.date))].sort();
+  const t1ByDate = dates.map(d => filteredRecords.filter(r=>r.date===d).reduce((sum,r)=>sum+r.t1a,0) || 0);
+  const t2ByDate = dates.map(d => filteredRecords.filter(r=>r.date===d).reduce((sum,r)=>sum+r.t2a,0) || 0);
+  const t3ByDate = dates.map(d => filteredRecords.filter(r=>r.date===d).reduce((sum,r)=>sum+r.t3a,0) || 0);
+  const peakByDate = dates.map(d => Math.max(...filteredRecords.filter(r=>r.date===d).map(r=>r.peak),0));
+  
+  // Line chart
+  if (charts.line) charts.line.destroy();
+  charts.line = new Chart(document.getElementById("lineChart"), {
+    type: 'line',
+    data: { labels: dates, datasets: [
+      { label: 'T-1 A', data: t1ByDate, borderColor: '#006633', borderWidth: 2, fill: false, pointRadius: 3 },
+      { label: 'T-2 A', data: t2ByDate, borderColor: '#FF8C00', borderWidth: 2, fill: false },
+      { label: 'T-3 A', data: t3ByDate, borderColor: '#1565c0', borderWidth: 2, fill: false }
     ]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#e0eaf2',borderWidth:1,titleColor:'#1a3d4f',bodyColor:'#5e7e94',boxPadding:6,callbacks:{label:c=>' '+c.dataset.label+': '+c.parsed.y+' A'}}},
-      scales:{
-        x:{ticks:{color:'#8aadbe',font:{size:10},maxRotation:45,autoSkip:true},grid:{color:'rgba(0,0,0,.05)'}},
-        y:{ticks:{color:'#8aadbe',font:{size:10},callback:v=>v+' A'},grid:{color:'rgba(0,0,0,.05)'},beginAtZero:true}
-      }
-    }
+    options: { responsive: true, maintainAspectRatio: true }
+  });
+  
+  // Bar chart
+  if (charts.bar) charts.bar.destroy();
+  charts.bar = new Chart(document.getElementById("barChart"), {
+    type: 'bar', data: { labels: dates, datasets: [{ label: 'Peak Ampere', data: peakByDate, backgroundColor: '#FF8C00', borderRadius: 6 }] },
+    options: { responsive: true }
+  });
+  
+  // Average comparison
+  const avgT1 = filteredRecords.length ? filteredRecords.reduce((s,r)=>s+r.t1a,0)/filteredRecords.length : 0;
+  const avgT2 = filteredRecords.length ? filteredRecords.reduce((s,r)=>s+r.t2a,0)/filteredRecords.length : 0;
+  const avgT3 = filteredRecords.length ? filteredRecords.reduce((s,r)=>s+r.t3a,0)/filteredRecords.length : 0;
+  if (charts.avg) charts.avg.destroy();
+  charts.avg = new Chart(document.getElementById("avgChart"), {
+    type: 'bar', data: { labels: ['T-1', 'T-2', 'T-3'], datasets: [{ label: 'Average Ampere', data: [avgT1, avgT2, avgT3], backgroundColor: ['#006633','#FF8C00','#1565c0'] }] }
+  });
+  
+  // Doughnut - max per transformer
+  const maxT1 = filteredRecords.length ? Math.max(...filteredRecords.map(r=>r.t1a)) : 0;
+  const maxT2 = filteredRecords.length ? Math.max(...filteredRecords.map(r=>r.t2a)) : 0;
+  const maxT3 = filteredRecords.length ? Math.max(...filteredRecords.map(r=>r.t3a)) : 0;
+  if (charts.doughnut) charts.doughnut.destroy();
+  charts.doughnut = new Chart(document.getElementById("doughnutChart"), {
+    type: 'doughnut', data: { labels: ['T-1 Max', 'T-2 Max', 'T-3 Max'], datasets: [{ data: [maxT1, maxT2, maxT3], backgroundColor: ['#006633','#FF8C00','#1565c0'] }] }
   });
 }
 
-function renderBar(){
-  dc('bar');
-  const dates=[...new Set(filtered.map(r=>r._ds))].sort();
-  const vals=dates.map(d=>{const rows=filtered.filter(r=>r._ds===d);return rows.length?Math.max(...rows.map(r=>r._peak)):0;});
-  const maxV=Math.max(...vals,1);
-  const colors=vals.map(v=>{const rt=v/maxV;return rt>0.8?'rgba(211,47,47,.8)':rt>0.5?'rgba(255,140,0,.8)':'rgba(0,102,51,.8)';});
-  charts.bar=new Chart(document.getElementById('cBar'),{
-    type:'bar',
-    data:{labels:dates,datasets:[{label:'Peak A',data:vals,backgroundColor:colors,borderRadius:5,borderWidth:0}]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#e0eaf2',borderWidth:1,titleColor:'#1a3d4f',bodyColor:'#5e7e94',callbacks:{label:c=>' Peak: '+c.parsed.y+' A'}}},
-      scales:{
-        x:{ticks:{color:'#8aadbe',font:{size:10},maxRotation:45,autoSkip:true},grid:{display:false}},
-        y:{ticks:{color:'#8aadbe',font:{size:10},callback:v=>v+' A'},grid:{color:'rgba(0,0,0,.05)'},beginAtZero:true}
-      }
-    }
-  });
-}
+// Quick range buttons
+document.querySelectorAll(".quick-range").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll(".quick-range").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const days = parseInt(btn.dataset.days);
+    const to = new Date();
+    const from = new Date();
+    if (days > 0) from.setDate(to.getDate() - days);
+    document.getElementById("filterTo").value = days === 0 ? "" : to.toISOString().split('T')[0];
+    document.getElementById("filterFrom").value = days === 0 ? "" : from.toISOString().split('T')[0];
+    applyFilters();
+  };
+});
 
-function renderAvg(){
-  dc('avg');
-  const avg=(fn)=>filtered.length?(filtered.map(fn).reduce((a,b)=>a+b,0)/filtered.length).toFixed(1):0;
-  charts.avg=new Chart(document.getElementById('cAvg'),{
-    type:'bar',
-    data:{
-      labels:['T-1 A','T-2 A','T-3 A'],
-      datasets:[
-        {label:'Average',data:[avg(r=>r._t1),avg(r=>r._t2),avg(r=>r._t3)],backgroundColor:['rgba(0,102,51,.75)','rgba(255,140,0,.75)','rgba(21,101,192,.75)'],borderRadius:6,borderWidth:0},
-        {label:'Maximum',data:[Math.max(0,...filtered.map(r=>r._t1)),Math.max(0,...filtered.map(r=>r._t2)),Math.max(0,...filtered.map(r=>r._t3))],backgroundColor:['rgba(0,102,51,.2)','rgba(255,140,0,.2)','rgba(21,101,192,.2)'],borderRadius:6,borderWidth:1.5,borderColor:['#006633','#FF8C00','#1565c0'],borderDash:[4,3]},
-      ]
-    },
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{labels:{color:'#5e7e94',boxWidth:10,font:{size:11}}}},
-      scales:{
-        x:{ticks:{color:'#8aadbe'},grid:{display:false}},
-        y:{ticks:{color:'#8aadbe',callback:v=>v+' A'},grid:{color:'rgba(0,0,0,.05)'},beginAtZero:true}
-      }
-    }
-  });
-}
+// Export Excel
+document.getElementById("exportExcelAnalytics").onclick = () => {
+  if (!filteredRecords.length) { alert("No data to export"); return; }
+  const wsData = filteredRecords.map(r => ({ Date: r.date, User: r.user, "T-1 A": r.t1a, "T-2 A": r.t2a, "T-3 A": r.t3a, "Peak A": r.peak, "T-1 MVA": r.mva1, "T-2 MVA": r.mva2, "T-3 MVA": r.mva3 }));
+  const ws = XLSX.utils.json_to_sheet(wsData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "XYZ_Load_Data");
+  XLSX.writeFile(wb, `XYZ_Substation_Load_${new Date().toISOString().slice(0,10)}.xlsx`);
+};
 
-function renderDonut(){
-  dc('donut');
-  const pk1=Math.max(0,...filtered.map(r=>r._t1));
-  const pk2=Math.max(0,...filtered.map(r=>r._t2));
-  const pk3=Math.max(0,...filtered.map(r=>r._t3));
-  charts.donut=new Chart(document.getElementById('cDonut'),{
-    type:'doughnut',
-    data:{
-      labels:['T-1 A (45 MVA)','T-2 A (46 MVA)','T-3 A (47 MVA)'],
-      datasets:[{data:[pk1,pk2,pk3],backgroundColor:['rgba(0,102,51,.8)','rgba(255,140,0,.8)','rgba(21,101,192,.8)'],borderColor:'#fff',borderWidth:3,hoverOffset:8}]
-    },
-    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
-      plugins:{
-        legend:{position:'bottom',labels:{color:'#5e7e94',boxWidth:10,font:{size:11},padding:10}},
-        tooltip:{backgroundColor:'#fff',borderColor:'#e0eaf2',borderWidth:1,titleColor:'#1a3d4f',bodyColor:'#5e7e94',callbacks:{label:c=>' '+c.label+': '+c.parsed+' A'}}
-      }
-    }
-  });
-}
+document.getElementById("applyFilterBtn").onclick = () => applyFilters();
+document.getElementById("refreshDataBtn").onclick = () => loadSheetData();
 
-/* ── EXPORT ── */
-function dlExcel(){
-  if(!filtered.length){alert('No data to export');return;}
-  const rows=filtered.map(r=>({'Date':r._ds,'Substation':'XYZ','User':r._user,'T-1 MVA':r._mva1,'T-2 MVA':r._mva2,'T-3 MVA':r._mva3,'T-1 A':r._t1,'T-2 A':r._t2,'T-3 A':r._t3,'Peak A':r._peak}));
-  const ws=XLSX.utils.json_to_sheet(rows);
-  ws['!cols']=Object.keys(rows[0]).map(()=>({wch:13}));
-  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'XYZ Load Report');
-  const from=document.getElementById('aFrom').value||'start';
-  const to=document.getElementById('aTo').value||'end';
-  XLSX.writeFile(wb,`XYZ_LoadReport_${from}_to_${to}.xlsx`);
-}
+// Set default quick range (30 days)
+const defaultTo = new Date().toISOString().split('T')[0];
+const defaultFrom = new Date(Date.now() - 30*86400000).toISOString().split('T')[0];
+document.getElementById("filterFrom").value = defaultFrom;
+document.getElementById("filterTo").value = defaultTo;
 
-function dlCSV(){
-  if(!filtered.length){alert('No data to export');return;}
-  const hdrs=['Date','Substation','User','T-1 MVA','T-2 MVA','T-3 MVA','T-1 A','T-2 A','T-3 A','Peak A'];
-  const rows=filtered.map(r=>[r._ds,'XYZ',r._user,r._mva1,r._mva2,r._mva3,r._t1,r._t2,r._t3,r._peak].join(','));
-  const a=document.createElement('a');
-  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([hdrs.join(','),...rows].join('\n'));
-  a.download='XYZ_LoadReport.csv';a.click();
-}
+// Initialize
+loadSheetData();
 
-/* ── INIT ── */
-loadData();
+// Logout button
+document.getElementById("logoutBtn").onclick = () => { if(window.logout) window.logout(); else window.location.href="index.html"; };
 </script>
 </body>
 </html>
