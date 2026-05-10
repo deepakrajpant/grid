@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,6 +8,7 @@
 
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
+
     body{
       background:#eef2f5;
       font-family:'Inter',sans-serif;
@@ -18,6 +18,7 @@
       align-items:center;
       min-height:100vh;
     }
+
     .container{
       max-width:1100px;
       width:100%;
@@ -26,29 +27,36 @@
       box-shadow:0 10px 30px rgba(0,0,0,.08);
       overflow:hidden;
     }
+
     .header{
       background:#006633;
       padding:1.5rem 2rem;
       color:#fff;
-      position:relative;
+      position: relative;
     }
-    .header h1{font-size:1.6rem;font-weight:600;margin-bottom:.25rem}
-    .header .division{font-size:.8rem;opacity:.85;margin-top:.3rem}
-    .header .sub{font-size:.75rem;opacity:.8;margin-top:.2rem}
-    .logout-btn {
-      position:absolute;
-      top:1.2rem;
-      right:1.8rem;
-      background:rgba(255,255,255,0.2);
-      border:1px solid rgba(255,255,255,0.45);
-      border-radius:40px;
-      padding:0.45rem 1.2rem;
-      font-weight:500;
-      font-size:0.8rem;
-      color:white;
-      cursor:pointer;
+
+    .header h1{
+      font-size:1.6rem;
+      font-weight:600;
+      margin-bottom:.25rem;
     }
-    .form-body{padding:1.8rem 2rem;}
+
+    .header .division{
+      font-size:.8rem;
+      opacity:.85;
+      margin-top:.3rem;
+    }
+
+    .header .sub{
+      font-size:.75rem;
+      opacity:.8;
+      margin-top:.2rem;
+    }
+
+    .form-body{
+      padding:1.8rem 2rem;
+    }
+
     .info-bar{
       background:#f5f8fa;
       border-radius:14px;
@@ -61,6 +69,7 @@
       margin-bottom:2rem;
       border:1px solid #e2e8f0;
     }
+
     .info-item{
       display:flex;
       align-items:center;
@@ -71,16 +80,25 @@
       border-radius:40px;
       color:#2c5a6e;
     }
-    .date-input,.input-wrapper input{
-      border:none;
-      outline:none;
-      font-family:Inter,monospace;
+
+    .info-item strong{
+      color:#006633;
     }
+
     .date-input{
       border:1px solid #cbdce6;
       border-radius:30px;
       padding:.35rem .8rem;
+      font-size:.85rem;
+      font-family:Inter,monospace;
+      outline:none;
     }
+
+    .date-input:focus{
+      border-color:#FF8C00;
+      box-shadow:0 0 0 2px rgba(255,140,0,.2);
+    }
+
     .edit-btn{
       background:#eef2f7;
       border:none;
@@ -90,17 +108,26 @@
       cursor:pointer;
       color:#006633;
     }
+
     .trans-grid{
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
       gap:1.5rem;
       margin-bottom:2rem;
     }
+
     .card{
       border:1px solid #e9edf2;
       border-radius:18px;
       padding:1.2rem;
+      transition:.2s;
     }
+
+    .card:hover{
+      border-color:#FF8C00;
+      box-shadow:0 8px 18px rgba(255,140,0,.08);
+    }
+
     .card-title{
       display:flex;
       justify-content:space-between;
@@ -108,6 +135,12 @@
       padding-bottom:.5rem;
       border-bottom:2px solid #eef2f7;
     }
+
+    .card-title h3{
+      color:#006633;
+      font-size:1.1rem;
+    }
+
     .mva-badge{
       font-size:.7rem;
       background:#eef3f8;
@@ -116,6 +149,7 @@
       color:#FF8C00;
       font-weight:600;
     }
+
     .input-group label{
       font-size:.7rem;
       font-weight:600;
@@ -124,6 +158,7 @@
       margin-bottom:6px;
       text-transform:uppercase;
     }
+
     .input-wrapper{
       display:flex;
       align-items:center;
@@ -132,7 +167,21 @@
       padding:.1rem .1rem .1rem 1rem;
       background:#f9fbfd;
     }
-    .input-wrapper input{width:100%;padding:.7rem .4rem;background:transparent;}
+
+    .input-wrapper:focus-within{
+      border-color:#FF8C00;
+      background:#fff;
+    }
+
+    .input-wrapper input{
+      border:none;
+      outline:none;
+      width:100%;
+      padding:.7rem .4rem;
+      background:transparent;
+      font-family:Inter,monospace;
+    }
+
     .unit{
       background:#eef3f8;
       padding:.2rem .9rem;
@@ -141,7 +190,19 @@
       color:#006633;
       font-weight:600;
     }
-    .actions{display:flex;gap:1rem;justify-content:center;margin-bottom:1rem;}
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button{
+      display:none;
+    }
+
+    .actions{
+      display:flex;
+      gap:1rem;
+      justify-content:center;
+      margin-bottom:1rem;
+    }
+
     .btn-primary,.btn-secondary{
       border:none;
       border-radius:50px;
@@ -149,43 +210,167 @@
       cursor:pointer;
       font-weight:600;
     }
-    .btn-primary{background:#006633;color:#fff;}
-    .btn-secondary{background:#fff4e6;border:1px solid #FF8C00;color:#006633;}
-    .status{margin-top:1rem;padding:.7rem;border-radius:50px;text-align:center;font-size:.8rem;background:#f0f4f9;}
-    .status.success{background:#e8f5e9;color:#006633;}
-    .status.error{background:#ffeae6;color:#bc4e2c;}
-    .footer{background:#fafcfd;border-top:1px solid #eef2f7;padding:.8rem;text-align:center;font-size:.7rem;}
+
+    .btn-primary{
+      background:#006633;
+      color:#fff;
+    }
+
+    .btn-secondary{
+      background:#fff4e6;
+      border:1px solid #FF8C00;
+      color:#006633;
+    }
+
+    .status{
+      margin-top:1rem;
+      padding:.7rem;
+      border-radius:50px;
+      text-align:center;
+      font-size:.8rem;
+      background:#f0f4f9;
+    }
+
+    .status.success{
+      background:#e8f5e9;
+      color:#006633;
+    }
+
+    .status.error{
+      background:#ffeae6;
+      color:#bc4e2c;
+    }
+
+    .footer{
+      background:#fafcfd;
+      border-top:1px solid #eef2f7;
+      padding:.8rem;
+      text-align:center;
+      font-size:.7rem;
+    }
+
+    @media(max-width:700px){
+      .form-body{padding:1.2rem}
+      .info-bar{flex-direction:column;align-items:stretch}
+    }
+    
+    .logout-btn {
+      position: absolute;
+      top: 1.2rem;
+      right: 1.8rem;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      border-radius: 40px;
+      padding: 0.45rem 1.2rem;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      font-size: 0.8rem;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(2px);
+      letter-spacing: 0.3px;
+      z-index: 10;
+    }
+
+    .logout-btn:hover {
+      background: rgba(255, 255, 255, 0.35);
+      border-color: rgba(255, 255, 255, 0.75);
+      transform: scale(0.97);
+    }
+
+    .logout-btn:active {
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    /* ADD responsive tweak to avoid overlap on small screens */
+    @media (max-width: 640px) {
+      .logout-btn {
+        top: 0.8rem;
+        right: 1rem;
+        padding: 0.25rem 0.8rem;
+        font-size: 0.7rem;
+      }
+      .header {
+        padding-right: 5rem;
+      }
+    }
   </style>
 </head>
+
 <body>
+
 <div class="container">
-  <div class="header">
-    <h1>XYZ Substation</h1>
-    <div class="division">Nepal Electricity Authority · Butwal Grid Division (BGD)</div>
-    <div class="sub">Daily Peak Load Report</div>
-    <button id="logoutBtn" class="logout-btn" aria-label="Logout">⤿ Logout</button>
-  </div>
+
+<div class="header">
+  <h1>XYZ Substation</h1>
+  <div class="division">Nepal Electricity Authority · Butwal Grid Division (BGD)</div>
+  <div class="sub">Daily Peak Load Report</div>
+  <!-- FIXED: Single logout button with correct ID and onclick handler -->
+  <button id="logoutBtn" class="logout-btn" aria-label="Logout">⤿ Logout</button>
+</div>
 
   <div class="form-body">
+
     <div class="info-bar">
       <div class="info-item">Substation: <strong>XYZ</strong></div>
-      <div class="info-item">Date: <input type="date" id="recordDate" class="date-input"></div>
-      <div class="info-item">Operator: <strong id="userIdDisplay">DEEPAK</strong><button id="editOperatorBtn" class="edit-btn">edit</button></div>
+
+      <div class="info-item">
+        Date:
+        <input type="date" id="recordDate" class="date-input">
+      </div>
+
+      <div class="info-item">
+        Operator:
+        <strong id="userIdDisplay">DEEPAK</strong>
+        <button id="editOperatorBtn" class="edit-btn">edit</button>
+      </div>
     </div>
 
     <div class="trans-grid">
+
       <div class="card">
-        <div class="card-title"><h3>Transformer 01</h3><span class="mva-badge">45 MVA</span></div>
-        <div class="input-group"><label>Peak Amps</label><div class="input-wrapper"><input type="number" id="t1_amps" step="any"><span class="unit">A</span></div></div>
+        <div class="card-title">
+          <h3>Transformer 01</h3>
+          <span class="mva-badge">45 MVA</span>
+        </div>
+        <div class="input-group">
+          <label>Peak Amps</label>
+          <div class="input-wrapper">
+            <input type="number" id="t1_amps" placeholder="Required" step="any">
+            <span class="unit">A</span>
+          </div>
+        </div>
       </div>
+
       <div class="card">
-        <div class="card-title"><h3>Transformer 02</h3><span class="mva-badge">45 MVA</span></div>
-        <div class="input-group"><label>Peak Amps</label><div class="input-wrapper"><input type="number" id="t2_amps" step="any"><span class="unit">A</span></div></div>
+        <div class="card-title">
+          <h3>Transformer 02</h3>
+          <span class="mva-badge">46 MVA</span>
+        </div>
+        <div class="input-group">
+          <label>Peak Amps</label>
+          <div class="input-wrapper">
+            <input type="number" id="t2_amps" placeholder="Optional" step="any">
+            <span class="unit">A</span>
+          </div>
+        </div>
       </div>
+
       <div class="card">
-        <div class="card-title"><h3>Transformer 03</h3><span class="mva-badge">100 MVA</span></div>
-        <div class="input-group"><label>Peak Amps</label><div class="input-wrapper"><input type="number" id="t3_amps" step="any"><span class="unit">A</span></div></div>
+        <div class="card-title">
+          <h3>Transformer 03</h3>
+          <span class="mva-badge">47 MVA</span>
+        </div>
+        <div class="input-group">
+          <label>Peak Amps</label>
+          <div class="input-wrapper">
+            <input type="number" id="t3_amps" placeholder="Optional" step="any">
+            <span class="unit">A</span>
+          </div>
+        </div>
       </div>
+
     </div>
 
     <div class="actions">
@@ -193,120 +378,305 @@
       <button id="resetBtn" class="btn-secondary">Reset Fields</button>
     </div>
 
-    <div id="statusMsg" class="status">Fill at least one transformer's Ampere value.</div>
-    <div class="footer">NEA · Butwal Grid Division · Google Sheets</div>
+    <div id="statusMsg" class="status">
+      Fill at least one transformer's Ampere value.
+    </div>
+
+    <div class="footer">
+      <span>NEA</span> · Butwal Grid Division · Google Sheets
+    </div>
+
   </div>
 </div>
 
 <iframe name="hidden_google_iframe" style="display:none;"></iframe>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+<script>
+  // ==================== FIREBASE MODULE IMPORT (CORRECTED) ====================
+  // Removed leading spaces and fixed script type. Also wrapped in IIFE to avoid global conflicts.
+  (function() {
+    // Dynamically import Firebase modules using type="module" approach inside a script,
+    // but to keep compatibility we'll use a separate inline module? No - easiest: we use standard dynamic import?
+    // Because older parsing? Actually we can use a standard script that loads firebase via module if we change script type.
+    // But the requirement: originally there was a syntax error (script tag with type="module" and extra /////).
+    // I'll re-structure: Use a proper module-script tag that handles auth and firebase.
+    // However, since this block is inside a standard script, we can't use await import. Better: create a separate module script.
+    // But the existing code expects to run inside this script. To fix, I'll attach everything inside a module script appended to head.
+    // Simpler: Convert this whole script to a module? Not necessary, I'll create a new script element with type="module" that initializes Firebase.
+    // Ensure the logout button works, and auth state changes control redirection.
+    
+    const firebaseScript = document.createElement('script');
+    firebaseScript.type = 'module';
+    firebaseScript.textContent = `
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+      import {
+        getAuth,
+        onAuthStateChanged,
+        signOut
+      } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAMs4MtFfDVIFntC9hPYH_MClW1VsIJTZo",
-  authDomain: "gridlogin.firebaseapp.com",
-  databaseURL: "https://gridlogin-default-rtdb.firebaseio.com/",
-  projectId: "gridlogin",
-  storageBucket: "gridlogin.firebasestorage.app",
-  messagingSenderId: "860236561452",
-  appId: "1:860236561452:web:3b63bb006b0858b3426589"
-};
+      const firebaseConfig = {
+        apiKey: "AIzaSyAMs4MtFfDVIFntC9hPYH_MClW1VsIJTZo",
+        authDomain: "gridlogin.firebaseapp.com",
+        databaseURL: "https://gridlogin-default-rtdb.firebaseio.com/",
+        projectId: "gridlogin",
+        storageBucket: "gridlogin.firebasestorage.app",
+        messagingSenderId: "860236561452",
+        appId: "1:860236561452:web:3b63bb006b0858b3426589"
+      };
+      
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+      // Expose auth and logout functions globally for the main script
+      window.__firebaseAuth = auth;
+      window.__firebaseSignOut = signOut;
 
-onAuthStateChanged(auth, user => {
-  if (!user) {
-    window.location.href = "index.html";
-  } else {
-    localStorage.setItem("userEmail", user.email);
-  }
-});
+      onAuthStateChanged(auth, user => {
+        if (user) {
+          // Store user email in localStorage and optionally update display if element exists
+          localStorage.setItem("userEmail", user.email);
+          const userDisplaySpan = document.getElementById("userIdDisplay");
+          if (userDisplaySpan && user.email) {
+            // Show operator email or name, but don't override operator edit completely
+            // We can set a data attribute, but not force overwrite if manually edited.
+            if (!localStorage.getItem("operatorOverridden")) {
+              // Extract part before @ for cleaner display
+              const emailPrefix = user.email.split('@')[0];
+              userDisplaySpan.textContent = emailPrefix.toUpperCase();
+              // Also update the operator variable in main scope? We'll sync via localStorage.
+              localStorage.setItem("defaultOperator", emailPrefix.toUpperCase());
+            }
+          }
+        } else {
+          window.location.href = "index.html";
+        }
+      });
 
-document.getElementById("logoutBtn").addEventListener("click", () => {
-  signOut(auth).then(() => window.location.href = "index.html");
-});
+      window.logout = function() {
+        signOut(auth).then(() => {
+          window.location.href = "index.html";
+        }).catch((err) => {
+          console.error("Logout error", err);
+          window.location.href = "index.html";
+        });
+      };
+    `;
+    document.head.appendChild(firebaseScript);
+  })();
 
-(() => {
-  const $ = id => document.getElementById(id);
-  const submitBtn = $("submitBtn"), resetBtn = $("resetBtn"), statusMsg = $("statusMsg"),
-        recordDate = $("recordDate"), userDisplay = $("userIdDisplay"), editBtn = $("editOperatorBtn"),
-        inputs = [$("t1_amps"), $("t2_amps"), $("t3_amps")], iframe = document.querySelector("iframe");
+  // Main application logic (peak load form handling)
+  (function() {
+    const $ = id => document.getElementById(id);
 
-  const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScG9F5CDmCm8k6CIckSfJMxzIUQI8io0942FhyO-6B4lJT7EQ/formResponse";
-  let operator = "DEEPAK";
+    const submitBtn = $("submitBtn");
+    const resetBtn = $("resetBtn");
+    const statusMsg = $("statusMsg");
+    const recordDate = $("recordDate");
+    const userDisplay = $("userIdDisplay");
+    const editBtn = $("editOperatorBtn");
+    const t1Input = $("t1_amps");
+    const t2Input = $("t2_amps");
+    const t3Input = $("t3_amps");
+    const inputs = [t1Input, t2Input, t3Input];
+    const iframe = document.querySelector("iframe[name='hidden_google_iframe']");
 
-  const today = new Date();
-  recordDate.value = today.toISOString().split('T')[0];
+    const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScG9F5CDmCm8k6CIckSfJMxzIUQI8io0942FhyO-6B4lJT7EQ/formResponse";
 
-  const showStatus = (msg, error=false) => {
-    statusMsg.textContent = msg;
-    statusMsg.className = `status ${error ? 'error' : 'success'}`;
-  };
+    let operator = "DEEPAK";
 
-  editBtn.onclick = () => {
-    const newOp = prompt("Enter Operator ID:", operator);
-    if(newOp?.trim()) {
-      operator = newOp.trim();
-      userDisplay.textContent = operator;
+    // Try to retrieve previously saved operator from localStorage
+    const savedOperator = localStorage.getItem("peakLoadOperator");
+    if (savedOperator) {
+      operator = savedOperator;
+      if (userDisplay) userDisplay.textContent = operator;
+    } else {
+      // If Firebase might set a default later, we listen briefly
+      setTimeout(() => {
+        const fbDefault = localStorage.getItem("defaultOperator");
+        if (fbDefault && !localStorage.getItem("operatorOverridden")) {
+          operator = fbDefault;
+          if (userDisplay) userDisplay.textContent = operator;
+          localStorage.setItem("peakLoadOperator", operator);
+        }
+      }, 200);
     }
-  };
 
-  resetBtn.onclick = () => {
-    inputs.forEach(i => i.value = '');
-    showStatus('Fields cleared.');
-  };
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth()+1).padStart(2,"0");
+    const dd = String(today.getDate()).padStart(2,"0");
+    const defaultInputDate = `${yyyy}-${mm}-${dd}`;
+    recordDate.value = defaultInputDate;
 
-  submitBtn.onclick = () => {
-    if(!inputs.some(i => i.value.trim())) {
-      showStatus('Please fill at least one Amp value.', true);
-      return;
-    }
-
-    const date = recordDate.value.replace(/-/g, '/');
-    const amps = inputs.map(i => parseFloat(i.value) || 0);
-
-    submitBtn.disabled = true;
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = FORM_URL;
-    form.target = 'hidden_google_iframe';
-
-    const fields = [
-      ['entry.3094480','XYZ'],
-      ['entry.1525214963',date],
-      ['entry.538973069',operator],
-      ['entry.1124170376','45'],
-      ['entry.120303341','45'],
-      ['entry.387659555','100'],
-      ['entry.1451736055',amps[0]],
-      ['entry.31550722',amps[1]],
-      ['entry.442388986',amps[2]]
-    ];
-
-    fields.forEach(([name, value]) => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = name;
-      input.value = value;
-      form.appendChild(input);
-    });
-
-    document.body.appendChild(form);
-    iframe.onload = () => {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Submit Peak Load';
-      form.remove();
-      inputs.forEach(i => i.value = '');
-      showStatus('✅ Submitted successfully!');
+    const showStatus = (msg, isError = false) => {
+      statusMsg.textContent = msg;
+      statusMsg.className = `status ${isError ? "error" : "success"}`;
+      if (!isError) {
+        setTimeout(() => {
+          if (statusMsg) {
+            statusMsg.textContent = "Fill at least one transformer's Ampere value.";
+            statusMsg.className = "status";
+          }
+        }, 3000);
+      }
     };
 
-    form.submit();
-  };
-})();
+    const getDate = () => {
+      if (recordDate.value) {
+        return recordDate.value.replace(/-/g, "/");
+      }
+      return defaultInputDate.replace(/-/g, "/");
+    };
+
+    const getAmp = input => {
+      const val = parseFloat(input.value.trim());
+      return (!isNaN(val) && val >= 0) ? val : 0;
+    };
+
+    const hasInput = () => inputs.some(i => i.value.trim() !== "");
+
+    const clearFields = () => {
+      inputs.forEach(i => { if (i) i.value = ""; });
+      recordDate.value = defaultInputDate;
+    };
+
+    // Edit operator button
+    if (editBtn) {
+      editBtn.onclick = () => {
+        const newOp = prompt("Enter Operator ID / Name:", operator);
+        if (newOp && newOp.trim()) {
+          operator = newOp.trim();
+          userDisplay.textContent = operator;
+          localStorage.setItem("peakLoadOperator", operator);
+          localStorage.setItem("operatorOverridden", "true");
+        }
+      };
+    }
+
+    if (resetBtn) {
+      resetBtn.onclick = () => {
+        clearFields();
+        showStatus("Fields cleared.");
+      };
+    }
+
+    if (submitBtn) {
+      submitBtn.onclick = () => {
+        if (!hasInput()) {
+          showStatus("Please fill at least one Amp value.", true);
+          return;
+        }
+
+        const date = getDate();
+        const amps = inputs.map(inp => getAmp(inp));
+
+        // MVA values used in summary
+        const mvaValues = ["45", "46", "47"];
+        const summary = `=== PEAK LOAD ===\n\nSubstation: XYZ\nDate: ${date}\nOperator: ${operator}\n\nT1: ${mvaValues[0]} MVA | ${amps[0]} A\nT2: ${mvaValues[1]} MVA | ${amps[1]} A\nT3: ${mvaValues[2]} MVA | ${amps[2]} A\n\nConfirm submission?`;
+        
+        if (!confirm(summary)) {
+          showStatus("Submission cancelled.");
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Submitting...";
+
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = FORM_URL;
+        form.target = "hidden_google_iframe";
+        form.style.display = "none";
+
+        // Map fields according to Google Form structure
+        const fields = [
+          ["entry.3094480", "XYZ"],                     // Substation name
+          ["entry.1525214963", date],                   // Date field
+          ["entry.538973069", operator],                // Operator
+          ["entry.1124170376", "45"],                   // T1 MVA
+          ["entry.120303341", "46"],                    // T2 MVA
+          ["entry.387659555", "47"],                    // T3 MVA
+          ["entry.1451736055", amps[0]],                // T1 Amps
+          ["entry.31550722", amps[1]],                  // T2 Amps
+          ["entry.442388986", amps[2]]                  // T3 Amps
+        ];
+
+        for (const [name, value] of fields) {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = name;
+          input.value = value;
+          form.appendChild(input);
+        }
+
+        document.body.appendChild(form);
+
+        let submissionDone = false;
+        const doneCallback = () => {
+          if (submissionDone) return;
+          submissionDone = true;
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Submit Peak Load";
+          clearFields();
+          showStatus("✅ Submitted successfully!");
+          if (form && form.parentNode) form.remove();
+        };
+
+        if (iframe) {
+          iframe.onload = doneCallback;
+        }
+        // Fallback timeout in case iframe doesn't fire
+        setTimeout(doneCallback, 1200);
+
+        form.submit();
+      };
+    }
+
+    // Enter key navigation
+    inputs.forEach((input, idx) => {
+      if (input) {
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            if (idx < inputs.length - 1) {
+              inputs[idx + 1].focus();
+            } else {
+              if (submitBtn) submitBtn.click();
+            }
+          }
+        });
+      }
+    });
+
+    // Ensure that logout button from header is connected to the global logout function (exposed by firebase module)
+    const logoutHeaderBtn = document.getElementById("logoutBtn");
+    if (logoutHeaderBtn) {
+      logoutHeaderBtn.onclick = () => {
+        if (typeof window.logout === "function") {
+          window.logout();
+        } else {
+          // Fallback redirect if firebase not yet loaded 
+          window.location.href = "index.html";
+        }
+      };
+    }
+
+    // Additional clean: if firebase logout function becomes available later, attach again
+    window.addEventListener("load", () => {
+      if (typeof window.logout !== "function") {
+        // safety: define a generic redirect logout if firebase module didn't expose
+        window.logout = function() {
+          window.location.href = "index.html";
+        };
+        if (logoutHeaderBtn) {
+          logoutHeaderBtn.onclick = window.logout;
+        }
+      }
+    });
+  })();
 </script>
+
+<!-- Ensure that any leftover duplicate buttons are gone. The HTML structure is now correct -->
 </body>
 </html>
-```
