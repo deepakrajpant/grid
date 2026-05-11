@@ -1,938 +1,685 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>NEA | XYZ Substation Peak Load</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>NEA | XYZ Substation • Peak Load & Live Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            background: linear-gradient(135deg, #e0eef7 0%, #d4e2ec 100%);
+            font-family: 'Inter', sans-serif;
+            padding: 2rem 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
 
-    body {
-      background: linear-gradient(135deg, #e0eef7 0%, #d4e2ec 100%);
-      font-family: 'Inter', sans-serif;
-      padding: 2rem 1rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-    }
+        /* MAIN WRAPPER: two-column layout for larger screens */
+        .merged-dashboard {
+            max-width: 1600px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.8rem;
+        }
 
-    /* ── FORM CONTAINER ── */
-    .container {
-      max-width: 1150px;
-      width: 100%;
-      background: rgba(255,255,255,0.98);
-      border-radius: 32px;
-      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-      overflow: hidden;
-      margin-bottom: 2rem;
-    }
+        /* both containers share glassmorphic style */
+        .card-panel {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            backdrop-filter: blur(2px);
+            transition: transform 0.2s ease;
+        }
 
-    .header {
-      background: linear-gradient(105deg, #006633 0%, #008847 100%);
-      padding: 1.8rem 2.2rem;
-      color: #fff;
-      position: relative;
-      border-bottom: 1px solid rgba(255,255,255,0.2);
-    }
-    .header h1 { font-size:1.9rem; font-weight:700; margin-bottom:.3rem; display:flex; align-items:center; gap:12px; }
-    .header h1 i { font-size:1.8rem; opacity:.95; }
-    .header .division { font-size:.85rem; opacity:.9; font-weight:500; }
-    .header .sub { font-size:.75rem; opacity:.8; margin-top:.3rem; display:flex; align-items:center; gap:6px; }
+        /* Header / sub-header reuse */
+        .header {
+            background: linear-gradient(105deg, #006633 0%, #008847 100%);
+            padding: 1.4rem 2rem;
+            color: #fff;
+            position: relative;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
 
-    .form-body { padding:2rem 2.2rem; }
+        .header h1 {
+            font-size: 1.7rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-    .info-bar {
-      background:#f8fbfe; border-radius:24px; padding:1rem 1.8rem;
-      display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center;
-      gap:1.2rem; margin-bottom:2rem; border:1px solid #e2edf5;
-    }
-    .info-item {
-      display:flex; align-items:center; gap:12px; font-size:.9rem;
-      background:white; padding:.5rem 1.4rem; border-radius:60px;
-      color:#1e4a6e; box-shadow:0 1px 3px rgba(0,0,0,.05); border:1px solid #e9f0f5;
-    }
-    .info-item i { color:#FF8C00; font-size:1rem; width:20px; }
-    .info-item strong { color:#006633; font-weight:700; }
+        .header .division {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            font-weight: 500;
+        }
 
-    .date-input {
-      border:1.5px solid #dce5ec; border-radius:40px; padding:.5rem 1rem;
-      font-size:.85rem; font-family:'Inter',monospace; outline:none; background:white;
-    }
-    .date-input:focus { border-color:#FF8C00; box-shadow:0 0 0 3px rgba(255,140,0,.15); }
+        .logout-btn {
+            position: absolute;
+            top: 1.3rem;
+            right: 2rem;
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 40px;
+            padding: 0.5rem 1.3rem;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-    .trans-grid {
-      display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
-      gap:1.8rem; margin-bottom:2.5rem;
-    }
-    .card {
-      background:#fff; border-radius:28px; padding:1.5rem;
-      border:1px solid #ecf3f9; box-shadow:0 4px 12px rgba(0,0,0,.02);
-      transition:all .25s;
-    }
-    .card:hover { border-color:#FF8C00; box-shadow:0 20px 30px -12px rgba(255,140,0,.12); transform:translateY(-3px); }
-    .card-title {
-      display:flex; justify-content:space-between; align-items:baseline;
-      margin-bottom:1.4rem; padding-bottom:.7rem; border-bottom:2px solid #eff4fa;
-    }
-    .card-title h3 { color:#006633; font-size:1.25rem; font-weight:700; display:flex; align-items:center; gap:8px; }
-    .card-title h3 i { font-size:1.2rem; color:#FF8C00; }
-    .mva-badge {
-      font-size:.7rem; background:linear-gradient(135deg,#fff3e6,#ffe8d9);
-      padding:.35rem .9rem; border-radius:40px; color:#c96200; font-weight:700;
-    }
-    .input-group label {
-      font-size:.7rem; font-weight:700; color:#2c627e; display:block;
-      margin-bottom:8px; text-transform:uppercase; letter-spacing:.5px;
-    }
-    .input-wrapper {
-      display:flex; align-items:center; background:#fbfdff;
-      border:1.5px solid #e2edf4; border-radius:60px;
-      padding:.2rem .2rem .2rem 1.2rem; transition:all .2s;
-    }
-    .input-wrapper:focus-within { border-color:#FF8C00; background:#fff; box-shadow:0 0 0 4px rgba(255,140,0,.1); }
-    .input-wrapper input {
-      border:none; outline:none; width:100%; padding:.85rem .3rem;
-      background:transparent; font-family:'Inter',monospace; font-size:1rem;
-      font-weight:500; color:#1a3d4f;
-    }
-    .input-wrapper input::placeholder { color:#b7cfdf; font-weight:400; font-size:.85rem; }
-    .unit {
-      background:#eef3fa; padding:.4rem 1rem; border-radius:50px;
-      font-size:.75rem; color:#006633; font-weight:700; margin-right:4px;
-    }
-    input[type=number]::-webkit-inner-spin-button,
-    input[type=number]::-webkit-outer-spin-button { display:none; }
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0.97);
+        }
 
-    .actions {
-      display:flex; gap:1.2rem; justify-content:center; margin:1.2rem 0 1rem;
-    }
-    .btn-primary, .btn-secondary {
-      border:none; border-radius:60px; padding:.9rem 2.1rem;
-      cursor:pointer; font-weight:700; font-size:.9rem; transition:all .2s;
-      display:inline-flex; align-items:center; gap:10px;
-    }
-    .btn-primary {
-      background:linear-gradient(95deg,#006633,#008f47); color:#fff;
-      box-shadow:0 4px 8px rgba(0,102,51,.25);
-    }
-    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 12px 20px -8px rgba(0,102,51,.4); }
-    .btn-secondary { background:white; border:1.5px solid #FF8C00; color:#006633; }
-    .btn-secondary:hover { background:#fff9f0; transform:translateY(-2px); }
+        .form-body {
+            padding: 1.6rem 2rem;
+        }
 
-    .status {
-      margin-top:1.4rem; padding:.8rem; border-radius:50px;
-      text-align:center; font-size:.85rem; font-weight:500; background:#f2f6fa;
-    }
-    .status.success { background:#e3f7e8; color:#006633; }
-    .status.error { background:#ffece6; color:#bc4e2c; }
+        .info-bar {
+            background: #f8fbfe;
+            border-radius: 24px;
+            padding: 0.8rem 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.8rem;
+            border: 1px solid #e2edf5;
+        }
 
-    .footer {
-      background:#fbfefe; border-top:1px solid #eaf0f5;
-      padding:1rem; text-align:center; font-size:.7rem; color:#5e7e94;
-    }
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+            background: white;
+            padding: 0.4rem 1.2rem;
+            border-radius: 60px;
+            color: #1e4a6e;
+            border: 1px solid #e9f0f5;
+        }
 
-    .logout-btn {
-      position:absolute; top:1.3rem; right:2rem;
-      background:rgba(255,255,255,.18); backdrop-filter:blur(8px);
-      border:1px solid rgba(255,255,255,.4); border-radius:40px;
-      padding:.5rem 1.3rem; font-family:'Inter',sans-serif;
-      font-weight:600; font-size:.8rem; color:white; cursor:pointer; transition:all .2s;
-      display:flex; align-items:center; gap:8px;
-    }
-    .logout-btn:hover { background:rgba(255,255,255,.3); transform:scale(.97); }
+        .info-item i {
+            color: #FF8C00;
+        }
 
-    /* ════════════════════════════════════════════
-       ANALYTICS SECTION
-    ════════════════════════════════════════════ */
-    .analytics-wrap {
-      max-width:1150px; width:100%;
-    }
+        .date-input {
+            border: 1.5px solid #dce5ec;
+            border-radius: 40px;
+            padding: 0.4rem 0.9rem;
+            font-family: 'Inter', monospace;
+            background: white;
+        }
 
-    .analytics-header {
-      background:linear-gradient(105deg,#004d26,#006633);
-      border-radius:24px 24px 0 0;
-      padding:1.4rem 2rem;
-      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
-    }
-    .analytics-header h2 { color:#fff; font-size:1.2rem; font-weight:700; display:flex; align-items:center; gap:10px; }
-    .analytics-header h2 i { color:#7dffb0; }
-    .aload-badge {
-      background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3);
-      border-radius:30px; padding:.4rem 1.1rem; color:#fff; font-size:.78rem; font-weight:600;
-      display:flex; align-items:center; gap:7px;
-    }
-    .aload-dot { width:7px; height:7px; border-radius:50%; background:#7dffb0; animation:blink 1.5s infinite; }
-    @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+        .trans-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
 
-    .analytics-body {
-      background:#fff;
-      border:1px solid #dce8f0;
-      border-top:none;
-      border-radius:0 0 24px 24px;
-      padding:1.8rem;
-    }
+        .card {
+            background: #ffffff;
+            border-radius: 28px;
+            padding: 1.3rem;
+            border: 1px solid #ecf3f9;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+        }
 
-    /* FILTER BAR */
-    .filter-bar {
-      background:#f5f9fc; border:1px solid #e0eaf2; border-radius:16px;
-      padding:1rem 1.4rem; display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;
-      margin-bottom:1.6rem;
-    }
-    .fg { display:flex; flex-direction:column; gap:5px; }
-    .fg label { font-size:.68rem; font-weight:700; color:#2c627e; text-transform:uppercase; letter-spacing:.5px; }
-    .fg select, .fg input[type=date] {
-      background:#fff; border:1.5px solid #d5e4ee; border-radius:10px;
-      padding:.55rem .9rem; font-size:.85rem; font-family:'Inter',sans-serif;
-      color:#1a3d4f; outline:none; cursor:pointer; min-width:130px;
-    }
-    .fg select:focus,.fg input[type=date]:focus { border-color:#FF8C00; box-shadow:0 0 0 3px rgba(255,140,0,.1); }
-    .qbtns { display:flex; gap:6px; flex-wrap:wrap; }
-    .qb {
-      padding:.45rem .95rem; border-radius:20px; font-size:.75rem; font-weight:600;
-      cursor:pointer; background:transparent; border:1.5px solid #d5e4ee; color:#5e7e94;
-      transition:all .2s;
-    }
-    .qb:hover,.qb.on { border-color:#FF8C00; color:#FF8C00; background:rgba(255,140,0,.07); }
-    .fbtn {
-      padding:.55rem 1.3rem; border:none; border-radius:10px; font-weight:700;
-      font-size:.82rem; cursor:pointer; transition:all .2s;
-      display:flex; align-items:center; gap:7px;
-    }
-    .fbtn-green { background:#006633; color:#fff; }
-    .fbtn-green:hover { background:#008847; }
-    .fbtn-outline { background:#fff; border:1.5px solid #d5e4ee; color:#5e7e94; }
-    .fbtn-outline:hover { border-color:#FF8C00; color:#FF8C00; }
-    .fbtn-excel { background:#217346; color:#fff; }
-    .fbtn-excel:hover { background:#185a35; }
-    .fbtn-csv { background:#1565c0; color:#fff; }
-    .fbtn-csv:hover { background:#0d47a1; }
+        .card:hover {
+            border-color: #FF8C00;
+            box-shadow: 0 20px 30px -12px rgba(255, 140, 0, 0.12);
+            transform: translateY(-3px);
+        }
 
-    /* STAT CARDS */
-    .stat-row {
-      display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-      gap:12px; margin-bottom:1.6rem;
-    }
-    .scard {
-      background:#f8fbfe; border:1px solid #e2edf5; border-radius:16px;
-      padding:1.1rem 1.2rem; position:relative; overflow:hidden;
-    }
-    .scard::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; border-radius:2px; }
-    .sc1::before{background:#006633} .sc2::before{background:#FF8C00}
-    .sc3::before{background:#1565c0} .sc4::before{background:#9c27b0}
-    .sc5::before{background:#d32f2f}
-    .sc-label { font-size:.68rem; font-weight:700; color:#5e7e94; text-transform:uppercase; letter-spacing:.5px; margin-bottom:.5rem; }
-    .sc-val { font-size:1.6rem; font-weight:800; color:#1a3d4f; font-family:'Courier New',monospace; }
-    .sc-sub { font-size:.7rem; color:#8aadbe; margin-top:.3rem; }
+        .card-title {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #eff4fa;
+            padding-bottom: 0.6rem;
+        }
 
-    /* CHART SECTION */
-    .chart-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:1.6rem; }
-    @media(max-width:800px){.chart-grid{grid-template-columns:1fr}}
-    .chart-card {
-      background:#f8fbfe; border:1px solid #e2edf5; border-radius:16px; padding:1.2rem;
-    }
-    .chart-title {
-      font-size:.75rem; font-weight:700; color:#006633; text-transform:uppercase;
-      letter-spacing:.6px; margin-bottom:1rem; display:flex; align-items:center; gap:8px;
-    }
-    .chart-title i { color:#FF8C00; }
-    .chart-box { position:relative; }
+        .card-title h3 {
+            color: #006633;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
 
-    /* TABLE */
-    .tbl-wrap { overflow:auto; border-radius:12px; border:1px solid #e2edf5; }
-    table { width:100%; border-collapse:collapse; font-size:.82rem; }
-    thead tr { background:#006633; }
-    th { padding:10px 13px; text-align:left; color:#fff; font-weight:600; font-size:.72rem; text-transform:uppercase; letter-spacing:.5px; white-space:nowrap; }
-    td { padding:9px 13px; border-bottom:1px solid #edf3f8; color:#1a3d4f; white-space:nowrap; }
-    tbody tr:hover { background:#f0f8f3; }
-    tbody tr:last-child td { border-bottom:none; }
-    .peak-cell { font-weight:800; font-family:'Courier New',monospace; }
-    .pk-high { color:#d32f2f; }
-    .pk-med { color:#FF8C00; }
-    .pk-low { color:#006633; }
-    .status-badge {
-      padding:.25rem .75rem; border-radius:20px; font-size:.68rem; font-weight:700;
-    }
-    .sb-h { background:#fce4e4; color:#c62828; }
-    .sb-m { background:#fff3e0; color:#e65100; }
-    .sb-n { background:#e8f5e9; color:#2e7d32; }
+        .mva-badge {
+            background: linear-gradient(135deg, #fff3e6, #ffe8d9);
+            padding: 0.25rem 0.8rem;
+            border-radius: 40px;
+            color: #c96200;
+            font-weight: 700;
+            font-size: 0.7rem;
+        }
 
-    /* PAGER */
-    .pager { display:flex; justify-content:space-between; align-items:center; margin-top:12px; flex-wrap:wrap; gap:8px; }
-    .pager-info { font-size:.75rem; color:#8aadbe; }
-    .pager-btns { display:flex; gap:5px; }
-    .pb {
-      padding:.4rem .9rem; border-radius:7px; font-size:.75rem; cursor:pointer;
-      border:1.5px solid #d5e4ee; background:#fff; color:#5e7e94; transition:all .2s;
-    }
-    .pb:hover:not(:disabled) { border-color:#FF8C00; color:#FF8C00; }
-    .pb:disabled { opacity:.35; cursor:default; }
-    .pb.on { background:#006633; border-color:#006633; color:#fff; }
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            background: #fbfdff;
+            border: 1.5px solid #e2edf4;
+            border-radius: 60px;
+            padding: 0.1rem 0.1rem 0.1rem 1.2rem;
+            transition: all 0.2s;
+        }
 
-    /* LOADING */
-    .ldr { text-align:center; padding:30px; color:#8aadbe; font-size:.85rem; }
-    .spin {
-      width:30px; height:30px; border:3px solid #e0eaf2; border-top-color:#006633;
-      border-radius:50%; animation:spin .9s linear infinite; margin:0 auto 10px;
-    }
-    @keyframes spin{to{transform:rotate(360deg)}}
+        .input-wrapper:focus-within {
+            border-color: #FF8C00;
+            box-shadow: 0 0 0 4px rgba(255, 140, 0, 0.1);
+        }
 
-    .nodata { text-align:center; padding:30px; color:#8aadbe; font-size:.85rem; }
+        .input-wrapper input {
+            border: none;
+            outline: none;
+            width: 100%;
+            padding: 0.75rem 0.2rem;
+            background: transparent;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
 
-    /* Legend */
-    .legend { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:10px; font-size:.75rem; }
-    .leg { display:flex; align-items:center; gap:5px; color:#5e7e94; }
-    .leg-dot { width:10px; height:10px; border-radius:2px; }
+        .unit {
+            background: #eef3fa;
+            padding: 0.3rem 1rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.7rem;
+            color: #006633;
+        }
 
-    @media(max-width:700px){
-      .form-body{padding:1.5rem}
-      .actions{flex-direction:column;align-items:center}
-      .btn-primary,.btn-secondary{width:100%;justify-content:center}
-      .analytics-body{padding:1rem}
-    }
-    @media(max-width:640px){
-      .logout-btn{top:.8rem;right:1rem;padding:.3rem 1rem;font-size:.7rem}
-      .header{padding-right:5rem}
-    }
-  </style>
+        .actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin: 0.8rem 0 1rem;
+        }
+
+        .btn-primary, .btn-secondary {
+            border-radius: 60px;
+            padding: 0.8rem 1.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(95deg, #006633, #008f47);
+            color: white;
+            box-shadow: 0 4px 8px rgba(0,102,51,0.25);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: white;
+            border: 1.5px solid #FF8C00;
+            color: #006633;
+        }
+
+        .status {
+            margin-top: 1rem;
+            padding: 0.7rem;
+            border-radius: 50px;
+            text-align: center;
+            font-size: 0.8rem;
+            background: #f2f6fa;
+        }
+
+        .status.success {
+            background: #e3f7e8;
+            color: #006633;
+            border-left: 4px solid #006633;
+        }
+
+        .status.error {
+            background: #ffece6;
+            color: #bc4e2c;
+        }
+
+        /* DASHBOARD SECTION (merged style) */
+        .dashboard-panel {
+            background: rgba(255,255,255,0.98);
+            border-radius: 32px;
+            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .dash-header {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            padding: 1.2rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            border-bottom: 3px solid #f59e0b;
+        }
+
+        .dash-header h2 {
+            color: white;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .record-count {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 6px 18px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border: none;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .controls {
+            background: #f8fafc;
+            padding: 12px 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .controls input {
+            width: 100%;
+            max-width: 400px;
+            padding: 10px 18px;
+            border-radius: 40px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.85rem;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            max-height: 50vh;
+            background: white;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1000px;
+            font-size: 0.8rem;
+        }
+
+        .data-table th {
+            background: #1e293b;
+            color: white;
+            padding: 12px 8px;
+            position: sticky;
+            top: 0;
+            font-weight: 600;
+        }
+
+        .data-table td {
+            padding: 10px 8px;
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .data-table tbody tr:hover {
+            background: #eff6ff;
+        }
+
+        .numeric {
+            font-family: monospace;
+            font-weight: 600;
+        }
+        .high { color: #dc2626; font-weight: 700; }
+        .medium { color: #d97706; }
+        .normal { color: #059669; }
+        .timestamp-cell { font-family: monospace; font-size: 0.7rem; color: #475569; }
+
+        .loading-state, .empty-state { text-align: center; padding: 40px; }
+
+        .footer {
+            background: #f1f5f9;
+            padding: 10px;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #475569;
+        }
+
+        @media(max-width: 900px) {
+            .form-body { padding: 1.2rem; }
+            .logout-btn { top: 0.8rem; right: 1rem; padding: 0.3rem 1rem; font-size: 0.7rem; }
+            .header { padding-right: 5rem; }
+        }
+    </style>
 </head>
 <body>
+<div class="merged-dashboard">
+    <!-- PEAK LOAD SUBMISSION FORM (integrated with Firebase Auth + Google Form) -->
+    <div class="card-panel">
+        <div class="header">
+            <h1><i class="fas fa-bolt"></i> XYZ Substation</h1>
+            <div class="division">Nepal Electricity Authority · Butwal Grid Division (BGD)</div>
+            <div class="sub" style="font-size:0.7rem; opacity:0.8;"><i class="fas fa-chart-line"></i> Daily Peak Load Report</div>
+            <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
 
-<!-- ═══════════ FORM SECTION ═══════════ -->
-<div class="container">
-  <div class="header">
-    <h1><i class="fas fa-bolt"></i> XYZ Substation</h1>
-    <div class="division">Nepal Electricity Authority · Butwal Grid Division (BGD)</div>
-    <div class="sub"><i class="fas fa-chart-line"></i> Daily Peak Load Report</div>
-    <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
-  </div>
+        <div class="form-body">
+            <div class="info-bar">
+                <div class="info-item"><i class="fas fa-location-dot"></i> Substation: <strong>XYZ</strong></div>
+                <div class="info-item"><i class="far fa-calendar-alt"></i> Date: <input type="date" id="recordDate" class="date-input"></div>
+                <div class="info-item"><i class="fas fa-user-circle"></i> User ID: <strong id="userIdDisplay">LOADING...</strong></div>
+            </div>
 
-  <div class="form-body">
-    <div class="info-bar">
-      <div class="info-item"><i class="fas fa-location-dot"></i> Substation: <strong>XYZ</strong></div>
-      <div class="info-item"><i class="far fa-calendar-alt"></i> Date: <input type="date" id="recordDate" class="date-input"></div>
-      <div class="info-item"><i class="fas fa-user-circle"></i> User ID: <strong id="userIdDisplay">DEEPAK</strong></div>
+            <div class="trans-grid">
+                <div class="card">
+                    <div class="card-title"><h3><i class="fas fa-microchip"></i> Transformer 01</h3><span class="mva-badge">45 MVA</span></div>
+                    <div class="input-group"><label>⚡ Peak Load (Amperes)</label><div class="input-wrapper"><input type="number" id="t1_amps" placeholder="Enter current in Amps" step="any"><span class="unit">A</span></div></div>
+                </div>
+                <div class="card">
+                    <div class="card-title"><h3><i class="fas fa-microchip"></i> Transformer 02</h3><span class="mva-badge">46 MVA</span></div>
+                    <div class="input-group"><label>⚡ Peak Load (Amperes)</label><div class="input-wrapper"><input type="number" id="t2_amps" placeholder="Enter current in Amps" step="any"><span class="unit">A</span></div></div>
+                </div>
+                <div class="card">
+                    <div class="card-title"><h3><i class="fas fa-microchip"></i> Transformer 03</h3><span class="mva-badge">47 MVA</span></div>
+                    <div class="input-group"><label>⚡ Peak Load (Amperes)</label><div class="input-wrapper"><input type="number" id="t3_amps" placeholder="Enter current in Amps" step="any"><span class="unit">A</span></div></div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="submitBtn" class="btn-primary"><i class="fas fa-cloud-upload-alt"></i> Submit Peak Load</button>
+                <button id="resetBtn" class="btn-secondary"><i class="fas fa-undo-alt"></i> Reset Fields</button>
+            </div>
+            <div id="statusMsg" class="status"><i class="fas fa-info-circle"></i> Fill at least one transformer's Ampere value.</div>
+            <div class="footer" style="background:transparent; padding-top:0.5rem;"><i class="fas fa-database"></i> NEA · Butwal Grid Division · Integrated Google Sheets</div>
+        </div>
     </div>
 
-    <div class="trans-grid">
-      <div class="card">
-        <div class="card-title">
-          <h3><i class="fas fa-microchip"></i> Transformer 01</h3>
-          <span class="mva-badge" id="badge_t1">— MVA</span>
+    <!-- LIVE DASHBOARD SECTION (Google Sheets CSV Viewer) -->
+    <div class="dashboard-panel">
+        <div class="dash-header">
+            <h2><i class="fas fa-chart-simple"></i> Substation Monitoring Dashboard</h2>
+            <div style="display: flex; gap: 12px; align-items:center;">
+                <div class="record-count" id="recordCount">0 Records</div>
+                <button class="refresh-btn" id="refreshBtn"><i class="fas fa-sync-alt"></i> Refresh Data</button>
+            </div>
         </div>
-        <div class="input-group">
-          <label>⚡ Peak Load (Amperes)</label>
-          <div class="input-wrapper">
-            <input type="number" id="t1_amps" placeholder="Enter current in Amps" step="any">
-            <span class="unit">A</span>
-          </div>
+        <div class="controls">
+            <input type="text" id="searchInput" placeholder="🔍 Search by substation, user ID, date, transformer values...">
         </div>
-      </div>
-      <div class="card">
-        <div class="card-title">
-          <h3><i class="fas fa-microchip"></i> Transformer 02</h3>
-          <span class="mva-badge" id="badge_t2">— MVA</span>
+        <div class="table-container" id="tableContainer">
+            <div class="loading-state"><div class="spinner" style="width:40px;height:40px;border:3px solid #e2e8f0; border-top-color:#3b82f6; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 15px;"></div><p>Loading records from Google Sheets...</p></div>
         </div>
-        <div class="input-group">
-          <label>⚡ Peak Load (Amperes)</label>
-          <div class="input-wrapper">
-            <input type="number" id="t2_amps" placeholder="Enter current in Amps" step="any">
-            <span class="unit">A</span>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">
-          <h3><i class="fas fa-microchip"></i> Transformer 03</h3>
-          <span class="mva-badge" id="badge_t3">— MVA</span>
-        </div>
-        <div class="input-group">
-          <label>⚡ Peak Load (Amperes)</label>
-          <div class="input-wrapper">
-            <input type="number" id="t3_amps" placeholder="Enter current in Amps" step="any">
-            <span class="unit">A</span>
-          </div>
-        </div>
-      </div>
+        <div class="footer">Data source: Google Sheets CSV (real-time from form submissions) | Auto-refresh on demand</div>
     </div>
-
-    <div class="actions">
-      <button id="submitBtn" class="btn-primary"><i class="fas fa-cloud-upload-alt"></i> Submit Peak Load</button>
-      <button id="resetBtn" class="btn-secondary"><i class="fas fa-undo-alt"></i> Reset Fields</button>
-    </div>
-
-    <div id="statusMsg" class="status">
-      <i class="fas fa-info-circle"></i> Fill at least one transformer's Ampere value.
-    </div>
-  </div>
-
-  <div class="footer">
-    <i class="fas fa-database"></i> NEA · Butwal Grid Division · Integrated Google Sheets
-  </div>
 </div>
-
-<!-- ═══════════ ANALYTICS SECTION ═══════════ -->
-<div class="analytics-wrap">
-
-  <div class="analytics-header">
-    <h2><i class="fas fa-chart-area"></i> XYZ Substation — Load Analytics</h2>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-      <div class="aload-badge"><span class="aload-dot"></span> Live Google Sheets</div>
-      <button class="fbtn fbtn-outline" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="loadData()">
-        <i class="fas fa-sync-alt"></i> Refresh
-      </button>
-    </div>
-  </div>
-
-  <div class="analytics-body">
-
-    <!-- FILTER BAR -->
-    <div class="filter-bar">
-      <div class="fg">
-        <label>Date From</label>
-        <input type="date" id="aFrom">
-      </div>
-      <div class="fg">
-        <label>Date To</label>
-        <input type="date" id="aTo">
-      </div>
-      <div class="fg">
-        <label>Transformer</label>
-        <select id="aTrans">
-          <option value="peak">Peak (Max T1/T2/T3)</option>
-          <option value="t1">T-1 A Only</option>
-          <option value="t2">T-2 A Only</option>
-          <option value="t3">T-3 A Only</option>
-        </select>
-      </div>
-      <div class="fg">
-        <label>Submitted By</label>
-        <select id="aUser"><option value="">All Users</option></select>
-      </div>
-      <div class="fg">
-        <label>Quick Range</label>
-        <div class="qbtns">
-          <button class="qb" data-d="7">7D</button>
-          <button class="qb on" data-d="30">30D</button>
-          <button class="qb" data-d="90">3M</button>
-          <button class="qb" data-d="0">All</button>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
-        <button class="fbtn fbtn-green" onclick="applyFilter()"><i class="fas fa-filter"></i> Apply</button>
-        <button class="fbtn fbtn-outline" onclick="resetFilter()"><i class="fas fa-times"></i> Reset</button>
-        <button class="fbtn fbtn-excel" onclick="dlExcel()"><i class="fas fa-file-excel"></i> Excel</button>
-        <button class="fbtn fbtn-csv" onclick="dlCSV()"><i class="fas fa-file-csv"></i> CSV</button>
-      </div>
-    </div>
-
-    <!-- STAT CARDS -->
-    <div class="stat-row">
-      <div class="scard sc1">
-        <div class="sc-label">Total Records</div>
-        <div class="sc-val" id="stTotal">—</div>
-        <div class="sc-sub">XYZ entries</div>
-      </div>
-      <div class="scard sc2">
-        <div class="sc-label">Max Peak A</div>
-        <div class="sc-val" id="stMax">—</div>
-        <div class="sc-sub">Highest reading</div>
-      </div>
-      <div class="scard sc3">
-        <div class="sc-label">Avg Peak A</div>
-        <div class="sc-val" id="stAvg">—</div>
-        <div class="sc-sub">Mean value</div>
-      </div>
-      <div class="scard sc4">
-        <div class="sc-label">Min Peak A</div>
-        <div class="sc-val" id="stMin">—</div>
-        <div class="sc-sub">Lowest reading</div>
-      </div>
-      <div class="scard sc5">
-        <div class="sc-label">Submissions</div>
-        <div class="sc-val" id="stUsers">—</div>
-        <div class="sc-sub">Unique users</div>
-      </div>
-    </div>
-
-    <!-- CHARTS -->
-    <div class="chart-grid">
-
-      <!-- Line chart: T1, T2, T3 over time -->
-      <div class="chart-card">
-        <div class="chart-title"><i class="fas fa-wave-square"></i> Ampere Trend Over Time</div>
-        <div class="legend">
-          <span class="leg"><span class="leg-dot" style="background:#006633"></span>T-1 A</span>
-          <span class="leg"><span class="leg-dot" style="background:#FF8C00"></span>T-2 A</span>
-          <span class="leg"><span class="leg-dot" style="background:#1565c0"></span>T-3 A</span>
-          <span class="leg"><span class="leg-dot" style="background:#9c27b0"></span>Peak</span>
-        </div>
-        <div class="chart-box" style="height:260px">
-          <canvas id="cLine" role="img" aria-label="Line chart of T1 T2 T3 and peak ampere over time"></canvas>
-        </div>
-      </div>
-
-      <!-- Bar chart: peak per date -->
-      <div class="chart-card">
-        <div class="chart-title"><i class="fas fa-chart-bar"></i> Daily Peak Ampere</div>
-        <div class="chart-box" style="height:280px">
-          <canvas id="cBar" role="img" aria-label="Bar chart of daily peak ampere"></canvas>
-        </div>
-      </div>
-
-      <!-- Transformer avg comparison -->
-      <div class="chart-card">
-        <div class="chart-title"><i class="fas fa-balance-scale"></i> Transformer Average Comparison</div>
-        <div class="chart-box" style="height:220px">
-          <canvas id="cAvg" role="img" aria-label="Bar chart comparing average ampere of each transformer"></canvas>
-        </div>
-      </div>
-
-      <!-- Max per transformer doughnut -->
-      <div class="chart-card">
-        <div class="chart-title"><i class="fas fa-circle-notch"></i> Peak Load Share by Transformer</div>
-        <div class="chart-box" style="height:220px">
-          <canvas id="cDonut" role="img" aria-label="Doughnut chart of peak load share by transformer"></canvas>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- DATA TABLE -->
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-      <div style="font-size:.78rem;font-weight:700;color:#006633;text-transform:uppercase;letter-spacing:.5px">
-        <i class="fas fa-table"></i> XYZ Records
-      </div>
-      <span style="font-size:.75rem;color:#8aadbe" id="rowCount"></span>
-    </div>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr>
-          <th onclick="sortBy('_ds')">Date ↕</th>
-          <th>User</th>
-          <th onclick="sortBy('_t1')">T-1 A ↕</th>
-          <th onclick="sortBy('_t2')">T-2 A ↕</th>
-          <th onclick="sortBy('_t3')">T-3 A ↕</th>
-          <th>T-1 MVA</th><th>T-2 MVA</th><th>T-3 MVA</th>
-          <th onclick="sortBy('_peak')">Peak A ↕</th>
-          <th>Load Bar</th>
-          <th>Status</th>
-        </tr></thead>
-        <tbody id="tblBody">
-          <tr><td colspan="11"><div class="ldr"><div class="spin"></div>Fetching XYZ data…</div></td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="pager">
-      <div class="pager-info" id="pgInfo"></div>
-      <div class="pager-btns" id="pgBtns"></div>
-    </div>
-
-  </div><!-- /analytics-body -->
-</div><!-- /analytics-wrap -->
 
 <iframe name="hidden_google_iframe" style="display:none;"></iframe>
 
 <script>
-/* ══════════════════════════════════════════════
-   FIREBASE AUTH (same as original)
-══════════════════════════════════════════════ */
-(function(){
-  const s=document.createElement('script');
-  s.type='module';
-  s.textContent=`
-    import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import{getAuth,onAuthStateChanged,signOut}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    const app=initializeApp({apiKey:"AIzaSyAMs4MtFfDVIFntC9hPYH_MClW1VsIJTZo",authDomain:"gridlogin.firebaseapp.com",databaseURL:"https://gridlogin-default-rtdb.firebaseio.com/",projectId:"gridlogin",storageBucket:"gridlogin.firebasestorage.app",messagingSenderId:"860236561452",appId:"1:860236561452:web:3b63bb006b0858b3426589"});
-    const auth=getAuth(app);
-    window.__firebaseAuth=auth; window.__firebaseSignOut=signOut;
-    onAuthStateChanged(auth,(user)=>{
-      if(!user){window.location.href="index.html";return;}
-      const name=(user.email||"User").split('@')[0].toUpperCase();
-      localStorage.setItem("userEmail",user.email);
-      localStorage.setItem("authenticatedUserId",name);
-      window.currentUserId=name;
-      const sp=document.getElementById("userIdDisplay");
-      if(sp)sp.textContent=name;
-    });
-    window.logout=function(){signOut(auth).then(()=>{window.location.href="index.html";}).catch(()=>{window.location.href="index.html";});};
-  `;
-  document.head.appendChild(s);
-})();
+    // ======================= FIREBASE AUTH MODULE =======================
+    (function() {
+        const firebaseScript = document.createElement('script');
+        firebaseScript.type = 'module';
+        firebaseScript.textContent = `
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+            import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-/* ══════════════════════════════════════════════
-   FORM SUBMISSION (same as original)
-══════════════════════════════════════════════ */
-(function(){
-  const $=id=>document.getElementById(id);
-  const FORM_URL="https://docs.google.com/forms/d/e/1FAIpQLScG9F5CDmCm8k6CIckSfJMxzIUQI8io0942FhyO-6B4lJT7EQ/formResponse";
-  const recordDate=$("recordDate"),submitBtn=$("submitBtn"),resetBtn=$("resetBtn"),statusMsg=$("statusMsg"),userIdSpan=$("userIdDisplay");
-  const t1=$("t1_amps"),t2=$("t2_amps"),t3=$("t3_amps"),inputs=[t1,t2,t3];
-  const iframe=document.querySelector("iframe[name='hidden_google_iframe']");
-  const today=new Date();
-  const def=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-  if(recordDate)recordDate.value=def;
-  const showStatus=(msg,err=false)=>{
-    if(!statusMsg)return;
-    statusMsg.innerHTML=`<i class="fas ${err?'fa-exclamation-triangle':'fa-check-circle'}"></i> ${msg}`;
-    statusMsg.className=`status ${err?'error':'success'}`;
-    if(!err)setTimeout(()=>{statusMsg.innerHTML='<i class="fas fa-info-circle"></i> Fill at least one transformer\'s Ampere value.';statusMsg.className='status';},2800);
-  };
-  const getDate=()=>(recordDate&&recordDate.value?recordDate.value:def).replace(/-/g,'/');
-  const getAmp=inp=>{const v=parseFloat(inp.value.trim());return(!isNaN(v)&&v>=0)?v:0;};
-  const hasInput=()=>inputs.some(inp=>inp&&inp.value.trim()!=='');
-  const clear=()=>{inputs.forEach(inp=>{if(inp)inp.value='';});if(recordDate)recordDate.value=def;};
-  const getOp=()=>{
-    if(userIdSpan&&userIdSpan.textContent&&userIdSpan.textContent!=='DEEPAK')return userIdSpan.textContent.trim();
-    return localStorage.getItem('authenticatedUserId')||'NEA_OPERATOR';
-  };
-  if(submitBtn)submitBtn.onclick=()=>{
-    if(!hasInput()){showStatus('Please fill at least one Amp value.',true);return;}
-    const date=getDate(),op=getOp(),amps=inputs.map(i=>getAmp(i));
-    const mv1=window._xyzMVA?window._xyzMVA[0]:'?',mv2=window._xyzMVA?window._xyzMVA[1]:'?',mv3=window._xyzMVA?window._xyzMVA[2]:'?';
-    if(!confirm(`⚡ PEAK LOAD SUMMARY ⚡\n\n📍 Substation: XYZ\n📅 Date: ${date}\n👤 User: ${op}\n\n🔹 T1 (${mv1} MVA): ${amps[0]} A\n🔹 T2 (${mv2} MVA): ${amps[1]} A\n🔹 T3 (${mv3} MVA): ${amps[2]} A\n\n✅ Confirm submission?`)){showStatus('Cancelled.');return;}
-    submitBtn.disabled=true;submitBtn.innerHTML='<i class="fas fa-spinner fa-pulse"></i> Submitting...';
-    const form=document.createElement('form');
-    form.method='POST';form.action=FORM_URL;form.target='hidden_google_iframe';form.style.display='none';
-    [["entry.3094480","XYZ"],["entry.1525214963",date],["entry.538973069",op],["entry.1124170376",window._xyzMVA?window._xyzMVA[0]:""],["entry.120303341",window._xyzMVA?window._xyzMVA[1]:""],["entry.387659555",window._xyzMVA?window._xyzMVA[2]:""],["entry.1451736055",amps[0]],["entry.31550722",amps[1]],["entry.442388986",amps[2]]].forEach(([n,v])=>{const i=document.createElement('input');i.type='hidden';i.name=n;i.value=v;form.appendChild(i);});
-    document.body.appendChild(form);
-    let done=false;
-    const fin=()=>{if(done)return;done=true;submitBtn.disabled=false;submitBtn.innerHTML='<i class="fas fa-cloud-upload-alt"></i> Submit Peak Load';clear();showStatus('✅ Submitted! Data synced.');if(form.parentNode)form.remove();setTimeout(loadData,1500);};
-    if(iframe)iframe.onload=fin;
-    setTimeout(fin,1300);form.submit();
-  };
-  if(resetBtn)resetBtn.onclick=()=>{clear();showStatus('Fields reset.');};
-  inputs.forEach((inp,i)=>{if(inp)inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();if(i<inputs.length-1&&inputs[i+1])inputs[i+1].focus();else if(submitBtn)submitBtn.click();}});});
-  const lb=document.getElementById('logoutBtn');
-  if(lb)lb.onclick=e=>{e.preventDefault();if(typeof window.logout==='function')window.logout();else window.location.href='index.html';};
-})();
+            const firebaseConfig = {
+                apiKey: "AIzaSyAMs4MtFfDVIFntC9hPYH_MClW1VsIJTZo",
+                authDomain: "gridlogin.firebaseapp.com",
+                databaseURL: "https://gridlogin-default-rtdb.firebaseio.com/",
+                projectId: "gridlogin",
+                storageBucket: "gridlogin.firebasestorage.app",
+                messagingSenderId: "860236561452",
+                appId: "1:860236561452:web:3b63bb006b0858b3426589"
+            };
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            window.__firebaseAuth = auth;
+            window.__firebaseSignOut = signOut;
 
-/* ══════════════════════════════════════════════
-   ANALYTICS ENGINE
-══════════════════════════════════════════════ */
-const CSV_URL='https://docs.google.com/spreadsheets/d/1u268xpWSLvzQQeOhana79NERbkVtu2K2UDG17xR4IAY/export?format=csv';
-const PROXIES=[
-  u=>'https://corsproxy.io/?url='+encodeURIComponent(u),
-  u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),
-  u=>'https://thingproxy.freeboard.io/fetch/'+u,
-];
+            onAuthStateChanged(auth, (user) => {
+                if (!user) {
+                    window.location.href = "index.html";
+                    return;
+                }
+                const userEmail = user.email || "User";
+                const userIdName = userEmail.split('@')[0].toUpperCase();
+                localStorage.setItem("authenticatedUserId", userIdName);
+                const userIdSpan = document.getElementById("userIdDisplay");
+                if (userIdSpan) userIdSpan.textContent = userIdName;
+                window.currentUserId = userIdName;
+            });
 
-let raw=[],filtered=[],sortKey='_ds',sortAsc=false,page=1;
-const PER=20;
-let charts={};
+            window.logout = function() {
+                signOut(auth).then(() => { window.location.href = "index.html"; })
+                        .catch(() => { window.location.href = "index.html"; });
+            };
+        `;
+        document.head.appendChild(firebaseScript);
+    })();
 
-/* ── FETCH ── */
-async function loadData(){
-  setLoading(true);
-  let err='';
-  for(const px of PROXIES){
-    const url=px(CSV_URL);
-    const host=url.split('/')[2];
-    setLoadMsg('Connecting via '+host+'…');
-    try{
-      const r=await fetch(url);
-      if(!r.ok)throw new Error('HTTP '+r.status);
-      const t=await r.text();
-      if(!t||t.trim().startsWith('<'))throw new Error('Got HTML not CSV');
-      ingest(t);return;
-    }catch(e){err=e.message;}
-  }
-  setLoading(false);
-  document.getElementById('tblBody').innerHTML=
-    '<tr><td colspan="11" class="nodata">⚠ Could not fetch data. Make sheet public (Share → Anyone with link → Viewer). Error: '+err+'</td></tr>';
-}
+    // ======================= PEAK LOAD SUBMIT LOGIC (Google Forms) =======================
+    (function() {
+        const t1 = document.getElementById("t1_amps");
+        const t2 = document.getElementById("t2_amps");
+        const t3 = document.getElementById("t3_amps");
+        const submitBtn = document.getElementById("submitBtn");
+        const resetBtn = document.getElementById("resetBtn");
+        const statusMsg = document.getElementById("statusMsg");
+        const recordDate = document.getElementById("recordDate");
+        const userIdSpan = document.getElementById("userIdDisplay");
+        const inputs = [t1, t2, t3];
+        const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScG9F5CDmCm8k6CIckSfJMxzIUQI8io0942FhyO-6B4lJT7EQ/formResponse";
 
-function setLoading(on){
-  if(on)document.getElementById('tblBody').innerHTML=
-    '<tr><td colspan="11"><div class="ldr"><div class="spin"></div><span id="ldMsg">Fetching…</span></div></td></tr>';
-}
-function setLoadMsg(m){const el=document.getElementById('ldMsg');if(el)el.textContent=m;}
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, "0");
+        const dd = String(today.getDate()).padStart(2, "0");
+        const defaultInputDate = `${yyyy}-${mm}-${dd}`;
+        if (recordDate) recordDate.value = defaultInputDate;
 
-/* ── PARSE CSV ── */
-function csvRow(line){
-  let res=[],cur='',q=false;
-  for(const c of line){if(c==='"'){q=!q;}else if(c===','&&!q){res.push(cur);cur='';}else cur+=c;}
-  res.push(cur);return res.map(s=>s.trim());
-}
+        const showStatus = (msg, isError = false) => {
+            if (!statusMsg) return;
+            statusMsg.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`;
+            statusMsg.className = `status ${isError ? "error" : "success"}`;
+            if (!isError) setTimeout(() => { if(statusMsg) { statusMsg.innerHTML = `<i class="fas fa-info-circle"></i> Fill at least one transformer's Ampere value.`; statusMsg.className = "status"; } }, 3000);
+        };
 
-function ingest(csv){
-  const lines=csv.trim().split('\n');
-  const hdrs=csvRow(lines[0]);
-  raw=[];
-  for(let i=1;i<lines.length;i++){
-    const v=csvRow(lines[i]);
-    if(v.length<3)continue;
-    const o={};hdrs.forEach((h,j)=>o[h]=v[j]||'');
-    /* ── FILTER: XYZ substation only ── */
-    if((o['Substation Name']||'').trim().toUpperCase()!=='XYZ')continue;
-    const ds=(o['Date']||'').replace(/\//g,'-').slice(0,10);
-    const dt=new Date(ds);if(isNaN(dt))continue;
-    o._date=dt;o._ds=ds;
-    o._user=(o['User ID']||'').trim();
-    o._t1=parseFloat(o['T-1 A'])||0;
-    o._t2=parseFloat(o['T-2 A'])||0;
-    o._t3=parseFloat(o['T-3 A'])||0;
-    o._mva1=parseFloat(o['T-1 MVA'])||0;
-    o._mva2=parseFloat(o['T-2 MVA'])||0;
-    o._mva3=parseFloat(o['T-2 MVA 2'])||parseFloat(o['T-3 MVA'])||0;
-    o._peak=Math.max(o._t1,o._t2,o._t3);
-    raw.push(o);
-  }
-  raw.sort((a,b)=>a._date-b._date);
-  // Extract MVA values from the most recent XYZ row and expose globally
-  if(raw.length){
-    const latest=raw[raw.length-1];
-    window._xyzMVA=[latest._mva1||'?', latest._mva2||'?', latest._mva3||'?'];
-    const b1=document.getElementById('badge_t1');
-    const b2=document.getElementById('badge_t2');
-    const b3=document.getElementById('badge_t3');
-    if(b1)b1.textContent=window._xyzMVA[0]+' MVA';
-    if(b2)b2.textContent=window._xyzMVA[1]+' MVA';
-    if(b3)b3.textContent=window._xyzMVA[2]+' MVA';
-    // Also update transformer card labels in form header
-    const lbl1=document.getElementById('trans_lbl1');
-    const lbl2=document.getElementById('trans_lbl2');
-    const lbl3=document.getElementById('trans_lbl3');
-    if(lbl1)lbl1.textContent=window._xyzMVA[0]+' MVA';
-    if(lbl2)lbl2.textContent=window._xyzMVA[1]+' MVA';
-    if(lbl3)lbl3.textContent=window._xyzMVA[2]+' MVA';
-  }
-  populateUsers();
-  setQuick(30);
-  applyFilter();
-}
+        const getDate = () => recordDate && recordDate.value ? recordDate.value.replace(/-/g, "/") : defaultInputDate.replace(/-/g, "/");
+        const getAmp = (el) => { let v = parseFloat(el?.value); return (!isNaN(v) && v >= 0) ? v : 0; };
+        const hasInput = () => inputs.some(inp => inp && inp.value.trim() !== "");
+        
+        const getOperatorId = () => {
+            if(userIdSpan && userIdSpan.textContent && userIdSpan.textContent !== "LOADING...") return userIdSpan.textContent.trim();
+            const stored = localStorage.getItem("authenticatedUserId");
+            if(stored) return stored;
+            return "NEA_OPERATOR";
+        };
 
-/* ── DROPDOWNS ── */
-function populateUsers(){
-  const sel=document.getElementById('aUser');
-  const users=[...new Set(raw.map(r=>r._user))].filter(Boolean).sort();
-  sel.innerHTML='<option value="">All Users</option>';
-  users.forEach(u=>{const o=document.createElement('option');o.value=u;o.textContent=u;sel.appendChild(o);});
-}
+        const clearFields = () => { inputs.forEach(inp => { if(inp) inp.value = ""; }); if(recordDate) recordDate.value = defaultInputDate; };
 
-/* ── QUICK RANGE ── */
-function setQuick(days){
-  document.querySelectorAll('.qb').forEach(b=>b.classList.toggle('on',+b.dataset.d===days));
-  if(!days){document.getElementById('aFrom').value='';document.getElementById('aTo').value='';return;}
-  const to=new Date(),from=new Date();from.setDate(from.getDate()-days);
-  document.getElementById('aTo').value=to.toISOString().slice(0,10);
-  document.getElementById('aFrom').value=from.toISOString().slice(0,10);
-}
-document.querySelectorAll('.qb').forEach(b=>b.addEventListener('click',()=>{setQuick(+b.dataset.d);applyFilter();}));
+        if (submitBtn) {
+            submitBtn.onclick = () => {
+                if (!hasInput()) { showStatus("Please fill at least one Amp value.", true); return; }
+                const date = getDate();
+                const operatorId = getOperatorId();
+                const amps = inputs.map(inp => getAmp(inp));
+                const summary = `⚡ PEAK LOAD SUMMARY ⚡\n📍 Substation: XYZ\n📅 Date: ${date}\n👤 User ID: ${operatorId}\n\n🔹 T1 (45 MVA): ${amps[0]} A\n🔹 T2 (46 MVA): ${amps[1]} A\n🔹 T3 (47 MVA): ${amps[2]} A\n\n✅ Confirm submission to Google Sheets?`;
+                if (!confirm(summary)) { showStatus("Submission cancelled.", false); return; }
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Submitting...';
+                
+                const form = document.createElement("form");
+                form.method = "POST";
+                form.action = FORM_URL;
+                form.target = "hidden_google_iframe";
+                form.style.display = "none";
+                const fields = [
+                    ["entry.3094480", "XYZ"],
+                    ["entry.1525214963", date],
+                    ["entry.538973069", operatorId],
+                    ["entry.1124170376", "45"],
+                    ["entry.120303341", "46"],
+                    ["entry.387659555", "47"],
+                    ["entry.1451736055", amps[0]],
+                    ["entry.31550722", amps[1]],
+                    ["entry.442388986", amps[2]]
+                ];
+                for (let [name, val] of fields) { let inp = document.createElement("input"); inp.type = "hidden"; inp.name = name; inp.value = val; form.appendChild(inp); }
+                document.body.appendChild(form);
+                let submitted = false;
+                const finalize = () => {
+                    if(submitted) return;
+                    submitted = true;
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Submit Peak Load';
+                    clearFields();
+                    showStatus("✅ Submitted successfully! Data synced.", false);
+                    if(form.parentNode) form.remove();
+                    // optional refresh dashboard after submit
+                    if(window.refreshDashboardFn) setTimeout(window.refreshDashboardFn, 800);
+                };
+                const iframeEl = document.querySelector("iframe[name='hidden_google_iframe']");
+                if(iframeEl) iframeEl.onload = finalize;
+                setTimeout(finalize, 1400);
+                form.submit();
+            };
+        }
+        if(resetBtn) resetBtn.onclick = () => { clearFields(); showStatus("All fields reset."); };
+        // Enter nav
+        inputs.forEach((inp, idx) => { if(inp) inp.addEventListener("keydown", (e) => { if(e.key === "Enter") { e.preventDefault(); if(idx < inputs.length-1) inputs[idx+1]?.focus(); else submitBtn?.click(); } }); });
+        // ensure user id display updated from Firebase
+        const userCheck = setInterval(() => { if(userIdSpan && userIdSpan.textContent !== "LOADING..." && userIdSpan.textContent !== "") clearInterval(userCheck); }, 200);
+    })();
 
-/* ── FILTER ── */
-function getAmpVal(r){
-  const t=document.getElementById('aTrans').value;
-  if(t==='t1')return r._t1;if(t==='t2')return r._t2;if(t==='t3')return r._t3;return r._peak;
-}
+    // ======================= DASHBOARD: Google Sheets CSV Loader + Merge =======================
+    (function() {
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/1u268xpWSLvzQQeOhana79NERbkVtu2K2UDG17xR4IAY/export?format=csv";
+        let allData = [];
+        let headers = [];
+        
+        function parseCSVRow(rowStr) {
+            const res = [];
+            let inQuotes = false, cur = '';
+            for(let i=0;i<rowStr.length;i++) {
+                const ch = rowStr[i];
+                if(ch === '"') inQuotes = !inQuotes;
+                else if(ch === ',' && !inQuotes) { res.push(cur.trim()); cur = ''; }
+                else cur += ch;
+            }
+            res.push(cur.trim());
+            return res.map(v => v.replace(/^"|"$/g, ''));
+        }
+        
+        function escapeHtml(str) { return (str || '').replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
+        
+        function getLoadClass(val) { let num = parseFloat(val); if(isNaN(num)) return ''; if(num > 50) return 'high'; if(num > 30) return 'medium'; return 'normal'; }
+        
+        function renderTable(data) {
+            const container = document.getElementById('tableContainer');
+            const recSpan = document.getElementById('recordCount');
+            if(!container) return;
+            if(!data.length) { container.innerHTML = '<div class="empty-state"><h3>📭 No records found</h3><p>Submit peak load to see data.</p></div>'; if(recSpan) recSpan.textContent = '0 Records'; return; }
+            if(recSpan) recSpan.textContent = `${data.length} Records`;
+            let html = '<table class="data-table"><thead><tr>';
+            headers.forEach(h => html += `<th>${escapeHtml(h)}</th>`);
+            html += '</tr></thead><tbody>';
+            data.forEach(row => {
+                html += '<tr>';
+                row.forEach((cell, idx) => {
+                    let cls = '';
+                    let headerName = headers[idx] || '';
+                    if(/A$|MVA/i.test(headerName)) cls = `numeric ${getLoadClass(cell)}`;
+                    if(/timestamp/i.test(headerName)) cls = 'timestamp-cell';
+                    html += `<td class="${cls}">${escapeHtml(cell || '—')}</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+        
+        async function loadDashboardData() {
+            const container = document.getElementById('tableContainer');
+            if(container) container.innerHTML = '<div class="loading-state"><div class="spinner" style="width:40px;height:40px;border:3px solid #e2e8f0; border-top-color:#3b82f6; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 15px;"></div><p>Fetching latest submissions...</p></div>';
+            try {
+                const resp = await fetch(CSV_URL, { cache: 'no-store' });
+                if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const text = await resp.text();
+                const lines = text.trim().split(/\r?\n/);
+                if(lines.length < 1) throw new Error("Empty CSV");
+                headers = parseCSVRow(lines[0]);
+                allData = lines.slice(1).filter(l => l.trim()).map(parseCSVRow);
+                renderTable(allData);
+            } catch(err) {
+                if(container) container.innerHTML = `<div class="empty-state"><h3>⚠️ Load error</h3><p>${escapeHtml(err.message)}</p><button class="refresh-btn" style="margin-top:12px;" onclick="window.refreshDashboardFn?.()">Retry</button></div>`;
+            }
+        }
+        
+        const refreshBtn = document.getElementById('refreshBtn');
+        if(refreshBtn) refreshBtn.addEventListener('click', () => loadDashboardData());
+        const searchInput = document.getElementById('searchInput');
+        if(searchInput) {
+            searchInput.addEventListener('input', function() {
+                const term = this.value.toLowerCase();
+                const filtered = allData.filter(row => row.join(' ').toLowerCase().includes(term));
+                renderTable(filtered);
+            });
+        }
+        window.refreshDashboardFn = loadDashboardData;
+        loadDashboardData();
+    })();
 
-function applyFilter(){
-  const from=document.getElementById('aFrom').value;
-  const to=document.getElementById('aTo').value;
-  const user=document.getElementById('aUser').value;
-  filtered=raw.filter(r=>{
-    if(from&&r._ds<from)return false;
-    if(to&&r._ds>to)return false;
-    if(user&&r._user!==user)return false;
-    return true;
-  });
-  page=1;updateStats();renderTable();renderCharts();
-}
-
-function resetFilter(){
-  document.getElementById('aUser').value='';
-  document.getElementById('aTrans').value='peak';
-  setQuick(30);applyFilter();
-}
-document.getElementById('aTrans').addEventListener('change',applyFilter);
-
-/* ── STATS ── */
-function updateStats(){
-  const amps=filtered.map(r=>getAmpVal(r));
-  document.getElementById('stTotal').textContent=amps.length;
-  document.getElementById('stMax').textContent=amps.length?Math.max(...amps).toFixed(0):'—';
-  document.getElementById('stAvg').textContent=amps.length?(amps.reduce((a,b)=>a+b,0)/amps.length).toFixed(1):'—';
-  document.getElementById('stMin').textContent=amps.length?Math.min(...amps).toFixed(0):'—';
-  document.getElementById('stUsers').textContent=new Set(filtered.map(r=>r._user)).size;
-}
-
-/* ── TABLE ── */
-function sortBy(k){
-  sortAsc=sortKey===k?!sortAsc:false;sortKey=k;
-  filtered.sort((a,b)=>{const A=a[k],B=b[k];if(typeof A==='number')return sortAsc?A-B:B-A;return sortAsc?String(A).localeCompare(B):String(B).localeCompare(A);});
-  page=1;renderTable();
-}
-
-function renderTable(){
-  const body=document.getElementById('tblBody');
-  if(!filtered.length){
-    body.innerHTML='<tr><td colspan="11" class="nodata">No records match the selected filters.</td></tr>';
-    document.getElementById('rowCount').textContent='';
-    document.getElementById('pgInfo').textContent='';
-    document.getElementById('pgBtns').innerHTML='';
-    return;
-  }
-  const maxPk=Math.max(...filtered.map(r=>r._peak));
-  const pages=Math.ceil(filtered.length/PER);
-  page=Math.min(page,pages);
-  const slice=filtered.slice((page-1)*PER,page*PER);
-  document.getElementById('rowCount').textContent=filtered.length+' XYZ records shown';
-
-  body.innerHTML=slice.map(r=>{
-    const pk=r._peak,ratio=maxPk?pk/maxPk:0;
-    const col=ratio>0.8?'#d32f2f':ratio>0.5?'#FF8C00':'#006633';
-    const pkClass=ratio>0.8?'pk-high':ratio>0.5?'pk-med':'pk-low';
-    const badge=ratio>0.8?'<span class="status-badge sb-h">High</span>':ratio>0.5?'<span class="status-badge sb-m">Medium</span>':'<span class="status-badge sb-n">Normal</span>';
-    const barW=Math.round(ratio*64)+4;
-    return `<tr>
-      <td style="font-family:'Courier New';color:#5e7e94;font-size:.8rem">${r._ds}</td>
-      <td style="font-weight:600;color:#1a3d4f">${r._user}</td>
-      <td style="font-family:'Courier New'">${r._t1||'—'}</td>
-      <td style="font-family:'Courier New'">${r._t2||'—'}</td>
-      <td style="font-family:'Courier New'">${r._t3||'—'}</td>
-      <td style="color:#8aadbe">${r._mva1||'—'}</td>
-      <td style="color:#8aadbe">${r._mva2||'—'}</td>
-      <td style="color:#8aadbe">${r._mva3||'—'}</td>
-      <td class="peak-cell ${pkClass}">${pk}</td>
-      <td><div style="display:flex;align-items:center;gap:6px"><div style="width:${barW}px;height:5px;border-radius:3px;background:${col}"></div></div></td>
-      <td>${badge}</td>
-    </tr>`;
-  }).join('');
-
-  // pager
-  document.getElementById('pgInfo').textContent=`Page ${page} of ${pages} · ${filtered.length} records`;
-  const pb=document.getElementById('pgBtns');pb.innerHTML='';
-  const mk=(lbl,pg2,act)=>{
-    const b=document.createElement('button');b.className='pb'+(act?' on':'');
-    b.textContent=lbl;b.disabled=act;b.onclick=()=>{page=pg2;renderTable();};pb.appendChild(b);
-  };
-  mk('‹',page-1,page===1);
-  const s=Math.max(1,page-2),e=Math.min(pages,page+2);
-  for(let p2=s;p2<=e;p2++)mk(p2,p2,p2===page);
-  mk('›',page+1,page===pages);
-}
-
-/* ── CHARTS ── */
-function dc(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
-
-function renderCharts(){
-  renderLine();renderBar();renderAvg();renderDonut();
-}
-
-function renderLine(){
-  dc('line');
-  const labels=[...new Set(filtered.map(r=>r._ds))].sort();
-  const agg=(fn)=>labels.map(d=>{
-    const rows=filtered.filter(r=>r._ds===d);
-    return rows.length?Math.max(...rows.map(fn)):null;
-  });
-  charts.line=new Chart(document.getElementById('cLine'),{
-    type:'line',
-    data:{labels,datasets:[
-      {label:'T-1 A',data:agg(r=>r._t1),borderColor:'#006633',backgroundColor:'rgba(0,102,51,.08)',fill:true,tension:0.35,pointRadius:4,pointBackgroundColor:'#006633',borderWidth:2},
-      {label:'T-2 A',data:agg(r=>r._t2),borderColor:'#FF8C00',backgroundColor:'rgba(255,140,0,.08)',fill:true,tension:0.35,pointRadius:4,pointBackgroundColor:'#FF8C00',borderWidth:2},
-      {label:'T-3 A',data:agg(r=>r._t3),borderColor:'#1565c0',backgroundColor:'rgba(21,101,192,.08)',fill:true,tension:0.35,pointRadius:4,pointBackgroundColor:'#1565c0',borderWidth:2},
-      {label:'Peak',data:agg(r=>r._peak),borderColor:'#9c27b0',borderDash:[5,4],backgroundColor:'transparent',tension:0.35,pointRadius:3,borderWidth:1.5},
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#e0eaf2',borderWidth:1,titleColor:'#1a3d4f',bodyColor:'#5e7e94',boxPadding:6,callbacks:{label:c=>' '+c.dataset.label+': '+c.parsed.y+' A'}}},
-      scales:{
-        x:{ticks:{color:'#8aadbe',font:{size:10},maxRotation:45,autoSkip:true},grid:{color:'rgba(0,0,0,.05)'}},
-        y:{ticks:{color:'#8aadbe',font:{size:10},callback:v=>v+' A'},grid:{color:'rgba(0,0,0,.05)'},beginAtZero:true}
-      }
+    // logout handler
+    const logoutBtn = document.getElementById("logoutBtn");
+    if(logoutBtn) {
+        logoutBtn.onclick = (e) => {
+            e.preventDefault();
+            if(typeof window.logout === "function") window.logout();
+            else window.location.href = "index.html";
+        };
     }
-  });
-}
-
-function renderBar(){
-  dc('bar');
-  const dates=[...new Set(filtered.map(r=>r._ds))].sort();
-  const vals=dates.map(d=>{const rows=filtered.filter(r=>r._ds===d);return rows.length?Math.max(...rows.map(r=>r._peak)):0;});
-  const maxV=Math.max(...vals,1);
-  const colors=vals.map(v=>{const rt=v/maxV;return rt>0.8?'rgba(211,47,47,.8)':rt>0.5?'rgba(255,140,0,.8)':'rgba(0,102,51,.8)';});
-  charts.bar=new Chart(document.getElementById('cBar'),{
-    type:'bar',
-    data:{labels:dates,datasets:[{label:'Peak A',data:vals,backgroundColor:colors,borderRadius:5,borderWidth:0}]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',borderColor:'#e0eaf2',borderWidth:1,titleColor:'#1a3d4f',bodyColor:'#5e7e94',callbacks:{label:c=>' Peak: '+c.parsed.y+' A'}}},
-      scales:{
-        x:{ticks:{color:'#8aadbe',font:{size:10},maxRotation:45,autoSkip:true},grid:{display:false}},
-        y:{ticks:{color:'#8aadbe',font:{size:10},callback:v=>v+' A'},grid:{color:'rgba(0,0,0,.05)'},beginAtZero:true}
-      }
-    }
-  });
-}
-
-function renderAvg(){
-  dc('avg');
-  const avg=(fn)=>filtered.length?(filtered.map(fn).reduce((a,b)=>a+b,0)/filtered.length).toFixed(1):0;
-  charts.avg=new Chart(document.getElementById('cAvg'),{
-    type:'bar',
-    data:{
-      labels:['T-1 A','T-2 A','T-3 A'],
-      datasets:[
-        {label:'Average',data:[avg(r=>r._t1),avg(r=>r._t2),avg(r=>r._t3)],backgroundColor:['rgba(0,102,51,.75)','rgba(255,140,0,.75)','rgba(21,101,192,.75)'],borderRadius:6,borderWidth:0},
-        {label:'Maximum',data:[Math.max(0,...filtered.map(r=>r._t1)),Math.max(0,...filtered.map(r=>r._t2)),Math.max(0,...filtered.map(r=>r._t3))],backgroundColor:['rgba(0,102,51,.2)','rgba(255,140,0,.2)','rgba(21,101,192,.2)'],borderRadius:6,borderWidth:1.5,borderColor:['#006633','#FF8C00','#1565c0'],borderDash:[4,3]},
-      ]
-    },
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{labels:{color:'#5e7e94',boxWidth:10,font:{size:11}}}},
-      scales:{
-        x:{ticks:{color:'#8aadbe'},grid:{display:false}},
-        y:{ticks:{color:'#8aadbe',callback:v=>v+' A'},grid:{color:'rgba(0,0,0,.05)'},beginAtZero:true}
-      }
-    }
-  });
-}
-
-function renderDonut(){
-  dc('donut');
-  const pk1=Math.max(0,...filtered.map(r=>r._t1));
-  const pk2=Math.max(0,...filtered.map(r=>r._t2));
-  const pk3=Math.max(0,...filtered.map(r=>r._t3));
-  charts.donut=new Chart(document.getElementById('cDonut'),{
-    type:'doughnut',
-    data:{
-      labels:[`T-1 A (${window._xyzMVA?window._xyzMVA[0]:'?'} MVA)`,`T-2 A (${window._xyzMVA?window._xyzMVA[1]:'?'} MVA)`,`T-3 A (${window._xyzMVA?window._xyzMVA[2]:'?'} MVA)`],
-      datasets:[{data:[pk1,pk2,pk3],backgroundColor:['rgba(0,102,51,.8)','rgba(255,140,0,.8)','rgba(21,101,192,.8)'],borderColor:'#fff',borderWidth:3,hoverOffset:8}]
-    },
-    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
-      plugins:{
-        legend:{position:'bottom',labels:{color:'#5e7e94',boxWidth:10,font:{size:11},padding:10}},
-        tooltip:{backgroundColor:'#fff',borderColor:'#e0eaf2',borderWidth:1,titleColor:'#1a3d4f',bodyColor:'#5e7e94',callbacks:{label:c=>' '+c.label+': '+c.parsed+' A'}}
-      }
-    }
-  });
-}
-
-/* ── EXPORT ── */
-function dlExcel(){
-  if(!filtered.length){alert('No data to export');return;}
-  const rows=filtered.map(r=>({'Date':r._ds,'Substation':'XYZ','User':r._user,'T-1 MVA':r._mva1,'T-2 MVA':r._mva2,'T-3 MVA':r._mva3,'T-1 A':r._t1,'T-2 A':r._t2,'T-3 A':r._t3,'Peak A':r._peak}));
-  const ws=XLSX.utils.json_to_sheet(rows);
-  ws['!cols']=Object.keys(rows[0]).map(()=>({wch:13}));
-  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'XYZ Load Report');
-  const from=document.getElementById('aFrom').value||'start';
-  const to=document.getElementById('aTo').value||'end';
-  XLSX.writeFile(wb,`XYZ_LoadReport_${from}_to_${to}.xlsx`);
-}
-
-function dlCSV(){
-  if(!filtered.length){alert('No data to export');return;}
-  const hdrs=['Date','Substation','User','T-1 MVA','T-2 MVA','T-3 MVA','T-1 A','T-2 A','T-3 A','Peak A'];
-  const rows=filtered.map(r=>[r._ds,'XYZ',r._user,r._mva1,r._mva2,r._mva3,r._t1,r._t2,r._t3,r._peak].join(','));
-  const a=document.createElement('a');
-  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([hdrs.join(','),...rows].join('\n'));
-  a.download='XYZ_LoadReport.csv';a.click();
-}
-
-/* ── INIT ── */
-loadData();
+    // extra style for spinner keyframes if missing
+    const styleSpin = document.createElement('style');
+    styleSpin.textContent = `@keyframes spin { to { transform: rotate(360deg); } }`;
+    document.head.appendChild(styleSpin);
 </script>
 </body>
 </html>
