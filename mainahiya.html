@@ -1,1002 +1,643 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>NEA • XYZ Substation | Peak Load & Analytics</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+  <title>NEA Smart Grid Access | Login</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-        body {
-            background: linear-gradient(135deg, #e0eef7 0%, #d4e2ec 100%);
-            font-family: 'Inter', sans-serif;
-            padding: 1rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(145deg, #e0eef7 0%, #cfe2ed 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
 
-        .merged-dashboard {
-            max-width: 1600px;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
+    /* main container - card style */
+    .login-wrapper {
+      max-width: 1200px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 2rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      display: flex;
+      flex-wrap: wrap;
+      transition: all 0.2s;
+    }
 
-        .card-panel, .dashboard-panel {
-            background: rgba(255, 255, 255, 0.98);
-            border-radius: 32px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            overflow: hidden;
-            backdrop-filter: blur(2px);
-        }
+    /* left illustration panel - green gradient (NEA style) */
+    .hero-panel {
+      flex: 1.2;
+      background: linear-gradient(135deg, #006633 0%, #008847 100%);
+      padding: 2rem 1.8rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
 
-        /* ========== HEADER REFACTORED: mobile-first flex layout ========== */
-        .header {
-            background: linear-gradient(105deg, #006633 0%, #008847 100%);
-            padding: 1.2rem 1.5rem;
-            color: #fff;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-        }
+    .hero-panel::before {
+      content: "";
+      position: absolute;
+      top: -30%;
+      right: -20%;
+      width: 280px;
+      height: 280px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 50%;
+      pointer-events: none;
+    }
 
-        .header-left {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
+    .hero-panel::after {
+      content: "";
+      position: absolute;
+      bottom: -20%;
+      left: -10%;
+      width: 240px;
+      height: 240px;
+      background: rgba(255,140,0,0.15);
+      border-radius: 50%;
+      pointer-events: none;
+    }
 
-        .header h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            letter-spacing: -0.2px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            line-height: 1.2;
-        }
+    .hero-icon {
+      font-size: 3.8rem;
+      margin-bottom: 1.5rem;
+      color: #FFD966;
+    }
 
-        .division {
-            font-size: 0.75rem;
-            opacity: 0.9;
-            font-weight: 500;
-        }
+    .hero-panel h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
 
-        .sub {
-            font-size: 0.7rem;
-            opacity: 0.8;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
+    .hero-panel p {
+      font-size: 0.95rem;
+      opacity: 0.9;
+      margin-bottom: 2rem;
+      line-height: 1.5;
+    }
 
-        .logout-btn {
-            background: rgba(255, 255, 255, 0.18);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: 60px;
-            padding: 0.6rem 1.2rem;
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: white;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            white-space: nowrap;
-        }
+    .feature-grid {
+      display: flex;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
 
-        .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: scale(0.97);
-        }
+    .feature-card {
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(4px);
+      padding: 0.9rem 1rem;
+      border-radius: 1.5rem;
+      min-width: 130px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.25);
+    }
 
-        /* form sections */
-        .form-body {
-            padding: 1.5rem;
-        }
+    .feature-card i {
+      font-size: 1.6rem;
+      margin-bottom: 0.4rem;
+      display: block;
+      color: #FFC107;
+    }
 
-        .info-bar {
-            background: #f8fbfe;
-            border-radius: 24px;
-            padding: 0.8rem 1.2rem;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            gap: 0.8rem;
-            margin-bottom: 1.8rem;
-            border: 1px solid #e2edf5;
-        }
+    .feature-card span {
+      font-weight: 500;
+      font-size: 0.8rem;
+    }
 
-        .info-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
-            background: white;
-            padding: 0.4rem 1rem;
-            border-radius: 60px;
-            color: #1e4a6e;
-            border: 1px solid #e9f0f5;
-            flex-wrap: wrap;
-        }
+    /* right form panel */
+    .form-panel {
+      flex: 1;
+      padding: 2.2rem 2rem;
+      background: white;
+      position: relative;
+    }
 
-        .date-input {
-            border: 1.5px solid #dce5ec;
-            border-radius: 40px;
-            padding: 0.4rem 0.8rem;
-            font-family: 'Inter', monospace;
-            background: white;
-            font-size: 0.9rem;
-        }
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 1.8rem;
+      justify-content: center;
+    }
 
-        .trans-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.2rem;
-            margin-bottom: 1.8rem;
-        }
+    .logo-badge {
+      background: #006633;
+      width: 48px;
+      height: 48px;
+      border-radius: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.5rem;
+      box-shadow: 0 6px 12px rgba(0,102,51,0.2);
+    }
 
-        .card {
-            background: #ffffff;
-            border-radius: 28px;
-            padding: 1.2rem;
-            border: 1px solid #ecf3f9;
-            transition: all 0.25s ease;
-        }
+    .logo-text {
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: #1e293b;
+      letter-spacing: -0.2px;
+    }
 
-        .card:hover {
-            border-color: #FF8C00;
-            box-shadow: 0 20px 30px -12px rgba(255, 140, 0, 0.12);
-        }
+    .logo-text span {
+      color: #006633;
+      font-weight: 800;
+    }
 
-        .card-title {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 1rem;
-            border-bottom: 2px solid #eff4fa;
-            padding-bottom: 0.6rem;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
+    .form-header {
+      text-align: center;
+      margin-bottom: 1.8rem;
+    }
 
-        .card-title h3 {
-            color: #006633;
-            font-weight: 700;
-            font-size: 1rem;
-        }
+    .form-header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
 
-        input[type=number]::-webkit-inner-spin-button,
-        input[type=number]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        input[type=number] {
-            -moz-appearance: textfield;
-            appearance: textfield;
-        }
+    .form-header p {
+      color: #4b5563;
+      font-size: 0.85rem;
+      margin-top: 6px;
+    }
 
-        .input-wrapper {
-            display: flex;
-            align-items: center;
-            background: #fbfdff;
-            border: 1.5px solid #e2edf4;
-            border-radius: 60px;
-            padding: 0.1rem 0.1rem 0.1rem 1.2rem;
-            transition: all 0.2s;
-        }
+    .input-group {
+      margin-bottom: 1.4rem;
+    }
 
-        .input-wrapper:focus-within {
-            border-color: #FF8C00;
-            box-shadow: 0 0 0 4px rgba(255, 140, 0, 0.1);
-        }
+    .input-group label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: #1f2a3e;
+      margin-bottom: 6px;
+    }
 
-        .input-wrapper input {
-            border: none;
-            outline: none;
-            width: 100%;
-            padding: 0.7rem 0.2rem;
-            background: transparent;
-            font-weight: 500;
-            font-size: 1rem;
-        }
+    .input-icon-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
 
-        .unit {
-            background: #eef3fa;
-            padding: 0.3rem 1rem;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 0.7rem;
-            color: #006633;
-        }
+    .input-icon-wrapper i:first-child {
+      position: absolute;
+      left: 16px;
+      color: #006633;
+      font-size: 1rem;
+      z-index: 2;
+      pointer-events: none;
+    }
 
-        .actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            margin: 0.4rem 0 0.6rem;
-            flex-wrap: wrap;
-        }
+    .input-icon-wrapper input {
+      width: 100%;
+      padding: 0.9rem 3rem 0.9rem 2.8rem;
+      border: 1.5px solid #e2edf4;
+      border-radius: 60px;
+      font-size: 1rem;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+      background: #fefefe;
+      outline: none;
+      -webkit-appearance: none;
+    }
 
-        .btn-primary, .btn-secondary {
-            border-radius: 60px;
-            padding: 0.8rem 1.6rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            border: none;
-            font-size: 0.9rem;
-            justify-content: center;
-        }
+    .input-icon-wrapper input:focus {
+      border-color: #FF8C00;
+      box-shadow: 0 0 0 3px rgba(255, 140, 0, 0.15);
+    }
 
-        .btn-primary {
-            background: linear-gradient(95deg, #006633, #008f47);
-            color: white;
-            box-shadow: 0 4px 8px rgba(0,102,51,0.25);
-        }
+    .password-toggle {
+      position: absolute;
+      right: 14px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #6c757d;
+      font-size: 1.2rem;
+      padding: 12px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      transition: color 0.2s;
+    }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-        }
+    .password-toggle:hover {
+      color: #006633;
+    }
 
-        .btn-secondary {
-            background: white;
-            border: 1.5px solid #FF8C00;
-            color: #006633;
-        }
+    /* larger hit area on mobile */
+    @media (max-width: 640px) {
+      .password-toggle {
+        padding: 14px 10px;
+        right: 10px;
+      }
+      .input-icon-wrapper input {
+        padding: 0.9rem 3.2rem 0.9rem 2.8rem;
+        font-size: 16px;
+      }
+    }
 
-        .status {
-            margin-top: 1rem;
-            padding: 0.7rem;
-            border-radius: 50px;
-            text-align: center;
-            font-size: 0.8rem;
-            background: #f2f6fa;
-        }
+    .btn-login {
+      background: linear-gradient(95deg, #006633, #008f47);
+      width: 100%;
+      padding: 1rem;
+      border: none;
+      border-radius: 60px;
+      font-weight: 700;
+      font-size: 1rem;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: 0.2s;
+      margin: 0.8rem 0 1rem;
+      box-shadow: 0 6px 14px rgba(0,102,51,0.25);
+    }
 
-        .status.success {
-            background: #e3f7e8;
-            color: #006633;
-            border-left: 4px solid #006633;
-        }
+    .btn-login:active {
+      transform: scale(0.97);
+    }
 
-        .status.error {
-            background: #ffece6;
-            color: #bc4e2c;
-        }
+    .forgot-link {
+      text-align: center;
+      margin: 0.5rem 0;
+    }
 
-        /* DASHBOARD SECTION */
-        .dashboard-panel {
-            background: rgba(255,255,255,0.98);
-            border-radius: 32px;
-            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.2);
-        }
+    .forgot-link button {
+      background: none;
+      border: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #FF8C00;
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 8px 12px;
+    }
 
-        .dash-header {
-            background: linear-gradient(135deg, #1e293b, #0f172a);
-            padding: 1rem 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            border-bottom: 3px solid #f59e0b;
-        }
+    .footer-note {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 0.7rem;
+      color: #6c757d;
+      border-top: 1px solid #eef2f5;
+      padding-top: 1.2rem;
+    }
 
-        .dash-header h2 {
-            color: white;
-            font-size: 1.3rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+    .footer-note a {
+      color: #006633;
+      text-decoration: none;
+      font-weight: 600;
+    }
 
-        .stats-summary {
-            display: flex;
-            gap: 0.8rem;
-            background: rgba(255,255,255,0.1);
-            padding: 0.3rem 1rem;
-            border-radius: 48px;
-            flex-wrap: wrap;
-        }
+    .msg-alert {
+      padding: 0.8rem;
+      border-radius: 60px;
+      font-size: 0.8rem;
+      text-align: center;
+      margin-bottom: 1.2rem;
+    }
 
-        .stat-badge {
-            color: white;
-            font-weight: 600;
-            font-size: 0.75rem;
-            background: rgba(0,0,0,0.3);
-            padding: 0.3rem 0.9rem;
-            border-radius: 32px;
-            backdrop-filter: blur(4px);
-            white-space: nowrap;
-        }
+    .msg-error {
+      background: #ffece6;
+      color: #bc4e2c;
+      border-left: 4px solid #f97316;
+    }
 
-        .stat-badge i {
-            margin-right: 6px;
-            color: #f59e0b;
-        }
+    .msg-success {
+      background: #e3f7e8;
+      color: #006633;
+      border-left: 4px solid #006633;
+    }
 
-        .btn-chart, .refresh-btn {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            border: none;
-            color: white;
-            padding: 0.6rem 1.2rem;
-            border-radius: 40px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.8rem;
-        }
+    /* loading overlay */
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      border-radius: 2rem;
+      opacity: 0;
+      visibility: hidden;
+      transition: 0.2s;
+    }
 
-        .refresh-btn {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-        }
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
 
-        .btn-chart:hover, .refresh-btn:hover {
-            transform: scale(0.97);
-        }
+    .spinner {
+      width: 44px;
+      height: 44px;
+      border: 4px solid #e2edf4;
+      border-top: 4px solid #006633;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
 
-        .table-container {
-            overflow-x: auto;
-            max-height: 55vh;
-            background: white;
-        }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
 
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 900px;
-            font-size: 0.75rem;
-        }
+    /* responsive design - mobile first optimizations */
+    @media (max-width: 800px) {
+      body {
+        padding: 0.75rem;
+      }
+      .hero-panel {
+        display: none;
+      }
+      .form-panel {
+        flex: 1;
+        padding: 1.8rem 1.5rem;
+      }
+      .login-wrapper {
+        max-width: 500px;
+        margin: 0 auto;
+        border-radius: 1.8rem;
+      }
+      .logo-text {
+        font-size: 1.2rem;
+      }
+      .form-header h1 {
+        font-size: 1.5rem;
+      }
+      .btn-login {
+        padding: 0.9rem;
+      }
+    }
 
-        .data-table th {
-            background: #1e293b;
-            color: white;
-            padding: 12px 6px;
-            position: sticky;
-            top: 0;
-            font-weight: 600;
-        }
+    @media (max-width: 480px) {
+      .form-panel {
+        padding: 1.5rem 1.2rem;
+      }
+      .input-icon-wrapper input {
+        padding: 0.85rem 3rem 0.85rem 2.6rem;
+      }
+      .logo-badge {
+        width: 42px;
+        height: 42px;
+        font-size: 1.3rem;
+      }
+      .logo-text {
+        font-size: 1.1rem;
+      }
+      .form-header h1 {
+        font-size: 1.4rem;
+      }
+      .btn-login {
+        font-size: 0.9rem;
+      }
+    }
 
-        .data-table td {
-            padding: 10px 6px;
-            text-align: center;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .data-table tbody tr:hover {
-            background: #eff6ff;
-        }
-        .numeric {
-            font-family: monospace;
-            font-weight: 600;
-        }
-        .timestamp-cell {
-            font-family: monospace;
-            font-size: 0.7rem;
-            color: #475569;
-        }
-        .loading-state, .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-        }
-        .footer {
-            background: #f1f5f9;
-            padding: 10px;
-            text-align: center;
-            font-size: 0.7rem;
-            color: #475569;
-        }
-
-        /* MODAL STYLES - mobile optimized */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(4px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            visibility: hidden;
-            opacity: 0;
-            transition: 0.2s;
-        }
-        .modal-overlay.active {
-            visibility: visible;
-            opacity: 1;
-        }
-        .modal-card {
-            background: white;
-            border-radius: 32px;
-            max-width: 92vw;
-            width: 900px;
-            padding: 1.2rem;
-            box-shadow: 0 30px 40px rgba(0,0,0,0.4);
-            position: relative;
-            margin: 1rem;
-        }
-        .modal-card h3 {
-            font-size: 1.2rem;
-            margin-bottom: 1rem;
-            border-left: 5px solid #f59e0b;
-            padding-left: 0.8rem;
-        }
-        .close-modal {
-            position: absolute;
-            top: 0.8rem;
-            right: 1.2rem;
-            font-size: 2rem;
-            cursor: pointer;
-            color: #64748b;
-            line-height: 1;
-        }
-        canvas {
-            max-height: 350px;
-            width: 100%;
-        }
-
-        /* ========== MOBILE FIRST ENHANCEMENTS ========== */
-        @media (max-width: 680px) {
-            body {
-                padding: 0.75rem;
-            }
-            .header {
-                flex-direction: column;
-                align-items: stretch;
-                text-align: center;
-                padding: 1rem;
-            }
-            .header-left {
-                align-items: center;
-            }
-            .logout-btn {
-                align-self: center;
-                white-space: nowrap;
-                width: auto;
-                justify-content: center;
-            }
-            .form-body {
-                padding: 1rem;
-            }
-            .info-bar {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 0.6rem;
-            }
-            .info-item {
-                justify-content: center;
-                font-size: 0.8rem;
-            }
-            .trans-grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-            .actions {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 0.8rem;
-            }
-            .btn-primary, .btn-secondary {
-                width: 100%;
-                justify-content: center;
-                padding: 0.8rem;
-            }
-            .dash-header {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .stats-summary {
-                justify-content: space-between;
-                width: 100%;
-                flex-wrap: wrap;
-            }
-            .stat-badge {
-                white-space: normal;
-                font-size: 0.7rem;
-                text-align: center;
-            }
-            .btn-chart, .refresh-btn {
-                width: 100%;
-                justify-content: center;
-                margin-top: 0.25rem;
-            }
-            .modal-card {
-                width: 95%;
-                padding: 1rem;
-            }
-            .modal-card h3 {
-                font-size: 1rem;
-                padding-right: 2rem;
-            }
-            .close-modal {
-                top: 0.6rem;
-                right: 1rem;
-                font-size: 1.8rem;
-            }
-            /* make all interactive elements min 44px tall for touch */
-            button, .btn-primary, .btn-secondary, .logout-btn, .btn-chart, .refresh-btn, .date-input, .input-wrapper input {
-                min-height: 48px;
-            }
-            .input-wrapper input {
-                font-size: 16px; /* prevents zoom on iOS */
-            }
-            .date-input {
-                font-size: 16px;
-            }
-            .data-table th, .data-table td {
-                padding: 8px 4px;
-                font-size: 0.7rem;
-            }
-            .data-table {
-                min-width: 800px;
-            }
-            .table-container {
-                max-height: 60vh;
-            }
-            .card-title h3 {
-                font-size: 0.95rem;
-            }
-        }
-
-        /* very small devices */
-        @media (max-width: 480px) {
-            .header h1 {
-                font-size: 1.3rem;
-            }
-            .stat-badge {
-                white-space: normal;
-                font-size: 0.65rem;
-            }
-            .stats-summary {
-                gap: 0.5rem;
-            }
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .spinner {
-            animation: spin 0.8s linear infinite;
-        }
-    </style>
+    @media (max-width: 380px) {
+      .form-panel {
+        padding: 1.2rem 1rem;
+      }
+      .input-icon-wrapper input {
+        padding: 0.8rem 2.8rem 0.8rem 2.4rem;
+      }
+    }
+  </style>
 </head>
 <body>
-<div class="merged-dashboard">
-    <!-- PEAK LOAD SUBMISSION FORM - restructured header for mobile -->
-    <div class="card-panel">
-        <div class="header">
-            <div class="header-left">
-                <h1><i class="fas fa-bolt"></i> XYZ Substation</h1>
-                <div class="division">Nepal Electricity Authority · Butwal Grid Division (BGD)</div>
-                <div class="sub"><i class="fas fa-chart-line"></i> Daily Peak Load Report</div>
-            </div>
-            <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
-        </div>
-        <div class="form-body">
-            <div class="info-bar">
-                <div class="info-item"><i class="fas fa-location-dot"></i> Substation: <strong>XYZ</strong></div>
-                <div class="info-item"><i class="far fa-calendar-alt"></i> Date: <input type="date" id="recordDate" class="date-input"></div>
-                <div class="info-item"><i class="fas fa-user-circle"></i> User ID: <strong id="userIdDisplay">LOADING...</strong></div>
-            </div>
-            <div class="trans-grid">
-                <div class="card">
-                    <div class="card-title"><h3><i class="fas fa-microchip"></i> Transformer 01</h3><span class="mva-badge" style="background:#eef2ff;">45 MVA</span></div>
-                    <div class="input-wrapper"><input type="number" id="t1_amps" placeholder="Peak Amperes" step="any"><span class="unit">A</span></div>
-                </div>
-                <div class="card">
-                    <div class="card-title"><h3><i class="fas fa-microchip"></i> Transformer 02</h3><span class="mva-badge" style="background:#eef2ff;">46 MVA</span></div>
-                    <div class="input-wrapper"><input type="number" id="t2_amps" placeholder="Peak Amperes" step="any"><span class="unit">A</span></div>
-                </div>
-                <div class="card">
-                    <div class="card-title"><h3><i class="fas fa-microchip"></i> Transformer 03</h3><span class="mva-badge" style="background:#eef2ff;">47 MVA</span></div>
-                    <div class="input-wrapper"><input type="number" id="t3_amps" placeholder="Peak Amperes" step="any"><span class="unit">A</span></div>
-                </div>
-            </div>
-            <div class="actions">
-                <button id="submitBtn" class="btn-primary"><i class="fas fa-cloud-upload-alt"></i> Submit Peak Load</button>
-                <button id="resetBtn" class="btn-secondary"><i class="fas fa-undo-alt"></i> Reset Fields</button>
-            </div>
-            <div id="statusMsg" class="status"><i class="fas fa-info-circle"></i> Fill at least one transformer Ampere value.</div>
-        </div>
+<div class="login-wrapper">
+  <!-- Left panel: NEA themed illustration (hidden on mobile) -->
+  <div class="hero-panel">
+    <div class="hero-icon">
+      <i class="fas fa-bolt"></i>
+    </div>
+    <h2>Smart Grid<br>Management System</h2>
+    <p>Nepal Electricity Authority · Secure access to substation analytics & peak load monitoring.</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <i class="fas fa-chart-line"></i>
+        <span>Real-time peak load</span>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-microchip"></i>
+        <span>Transformer health</span>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-shield-alt"></i>
+        <span>Role-based access</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right panel: login form -->
+  <div class="form-panel" style="position: relative;">
+    <div class="logo-area">
+      <div class="logo-badge">
+        <i class="fas fa-charging-station"></i>
+      </div>
+      <div class="logo-text">NEA<span> · GRID</span></div>
     </div>
 
-    <!-- LIVE DASHBOARD (XYZ only, no search) -->
-    <div class="dashboard-panel">
-        <div class="dash-header">
-            <h2><i class="fas fa-chart-simple"></i> Substation Monitoring · XYZ Data</h2>
-            <div style="display: flex; gap: 12px; align-items:center; flex-wrap: wrap;">
-                <div class="stats-summary" id="statSummary">
-                    <span class="stat-badge"><i class="fas fa-chart-line"></i> Peak: -- A</span>
-                    <span class="stat-badge"><i class="fas fa-waveform"></i> Avg: -- A</span>
-                </div>
-                <button id="trendChartBtn" class="btn-chart"><i class="fas fa-chart-line"></i> Trend Analysis</button>
-                <button id="refreshBtn" class="refresh-btn"><i class="fas fa-sync-alt"></i> Refresh</button>
-            </div>
-        </div>
-        <div class="table-container" id="tableContainer">
-            <div class="loading-state"><div class="spinner" style="width:40px;height:40px;border:3px solid #e2e8f0; border-top-color:#3b82f6; border-radius:50%; margin:0 auto 15px;"></div><p>Loading records from Google Sheets...</p></div>
-        </div>
-        <div class="footer">Data source: Google Sheets (real-time) | Latest records first | Zero Amps shown as —</div>
+    <div class="form-header">
+      <h1>Welcome back</h1>
+      <p>Login to access the substation dashboard</p>
     </div>
+
+    <div id="msg"></div>
+
+    <div class="input-group">
+      <label><i class="fas fa-envelope" style="margin-right: 6px;"></i> Email address</label>
+      <div class="input-icon-wrapper">
+        <i class="fas fa-envelope"></i>
+        <input type="email" id="email" placeholder="user123@gmail.com" autocomplete="email">
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label><i class="fas fa-lock"></i> Password</label>
+      <div class="input-icon-wrapper">
+        <i class="fas fa-lock"></i>
+        <input type="password" id="password" placeholder="··········" autocomplete="current-password">
+        <button class="password-toggle" id="togglePassword" type="button" aria-label="Show/Hide Password">
+          <i class="fas fa-eye"></i>
+        </button>
+      </div>
+    </div>
+
+    <button class="btn-login" onclick="login()">
+      <i class="fas fa-arrow-right-to-bracket"></i> Sign In
+    </button>
+
+    <div class="forgot-link">
+      <button onclick="forgotPassword()" id="forgotBtn">Forgot password?</button>
+    </div>
+
+    <div class="footer-note">
+      <p>🔒 Authorized access only · Nepal Electricity Authority<br> <a href="#">Secure login</a> with Single Sign‑On</p>
+    </div>
+
+    <div id="loading" class="loading-overlay">
+      <div class="spinner"></div>
+    </div>
+  </div>
 </div>
 
-<!-- Chart Modal -->
-<div id="chartModal" class="modal-overlay">
-    <div class="modal-card">
-        <span class="close-modal" id="closeModalBtn">&times;</span>
-        <h3><i class="fas fa-chart-line" style="color:#f59e0b;"></i> Transformer Ampere Trend (XYZ Substation)</h3>
-        <canvas id="trendCanvas" width="800" height="400" style="width:100%; height:auto; max-height:350px;"></canvas>
-        <p style="font-size:0.7rem; margin-top:12px; text-align:center;">📈 Trend over time (Date) — T1, T2, T3 Peak Amperes</p>
-    </div>
-</div>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getAuth,
+    signInWithEmailAndPassword,
+    sendPasswordResetEmail,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-<iframe name="hidden_google_iframe" style="display:none;"></iframe>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAMs4MtFfDVIFntC9hPYH_MClW1VsIJTZo",
+    authDomain: "gridlogin.firebaseapp.com",
+    databaseURL: "https://gridlogin-default-rtdb.firebaseio.com/",
+    projectId: "gridlogin",
+    storageBucket: "gridlogin.firebasestorage.app",
+    messagingSenderId: "860236561452",
+    appId: "1:860236561452:web:3b63bb006b0858b3426589"
+  };
 
-<script>
-    // ======================= FIREBASE AUTH (unchanged) =======================
-    (function() {
-        const firebaseScript = document.createElement('script');
-        firebaseScript.type = 'module';
-        firebaseScript.textContent = `
-            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-            import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
 
-            const firebaseConfig = {
-                apiKey: "AIzaSyAMs4MtFfDVIFntC9hPYH_MClW1VsIJTZo",
-                authDomain: "gridlogin.firebaseapp.com",
-                databaseURL: "https://gridlogin-default-rtdb.firebaseio.com/",
-                projectId: "gridlogin",
-                storageBucket: "gridlogin.firebasestorage.app",
-                messagingSenderId: "860236561452",
-                appId: "1:860236561452:web:3b63bb006b0858b3426589"
-            };
-            const app = initializeApp(firebaseConfig);
-            const auth = getAuth(app);
-            window.__firebaseAuth = auth;
-            window.__firebaseSignOut = signOut;
+  // DOM elements
+  const loadingEl = document.getElementById('loading');
+  const togglePassword = document.getElementById('togglePassword');
+  const passwordField = document.getElementById('password');
+  const msgElement = document.getElementById('msg');
 
-            onAuthStateChanged(auth, (user) => {
-                if (!user) {
-                    window.location.href = "index.html";
-                    return;
-                }
-                const userEmail = user.email || "User";
-                const userIdName = userEmail.split('@')[0].toUpperCase();
-                localStorage.setItem("authenticatedUserId", userIdName);
-                const userIdSpan = document.getElementById("userIdDisplay");
-                if (userIdSpan) userIdSpan.textContent = userIdName;
-                window.currentUserId = userIdName;
-            });
+  function showLoading() { if(loadingEl) loadingEl.classList.add('active'); }
+  function hideLoading() { if(loadingEl) loadingEl.classList.remove('active'); }
 
-            window.logout = function() {
-                signOut(auth).then(() => { window.location.href = "index.html"; })
-                        .catch(() => { window.location.href = "index.html"; });
-            };
-        `;
-        document.head.appendChild(firebaseScript);
-    })();
+  function showMsg(msg, isSuccess = false) {
+    if(!msgElement) return;
+    msgElement.innerText = msg;
+    msgElement.className = `msg-alert ${isSuccess ? 'msg-success' : 'msg-error'}`;
+    setTimeout(() => {
+      msgElement.innerText = '';
+      msgElement.className = '';
+    }, 5000);
+  }
 
-    // ======================= GLOBALS =======================
-    const CSV_URL = "https://docs.google.com/spreadsheets/d/1u268xpWSLvzQQeOhana79NERbkVtu2K2UDG17xR4IAY/export?format=csv";
-    let xyzFilteredSorted = [];    // only XYZ substation records, sorted date desc
-    let allRawData = [];
-    let csvHeaders = [];
-
-    function parseCSVRow(rowStr) {
-        const res = [];
-        let inQuotes = false, cur = '';
-        for(let i=0;i<rowStr.length;i++) {
-            const ch = rowStr[i];
-            if(ch === '"') inQuotes = !inQuotes;
-            else if(ch === ',' && !inQuotes) { res.push(cur.trim()); cur = ''; }
-            else cur += ch;
+  // Password visibility toggle (fixed icon behavior)
+  if (togglePassword && passwordField) {
+    togglePassword.addEventListener('click', () => {
+      const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordField.setAttribute('type', type);
+      // Toggle between eye and eye-slash icons
+      const icon = togglePassword.querySelector('i');
+      if (icon) {
+        if (type === 'password') {
+          icon.classList.remove('fa-eye-slash');
+          icon.classList.add('fa-eye');
+        } else {
+          icon.classList.remove('fa-eye');
+          icon.classList.add('fa-eye-slash');
         }
-        res.push(cur.trim());
-        return res.map(v => v.replace(/^"|"$/g, ''));
+      }
+    });
+  }
+
+  // Login logic (preserved exact routing)
+  window.login = function () {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    if (!email || !password) {
+      showMsg("Please fill in both email and password.");
+      return;
     }
 
-    function escapeHtml(str) { return (str || '').replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
+    showLoading();
 
-    let colIdx = { substation: -1, date: -1, t1A: -1, t2A: -1, t3A: -1, user: -1 };
-    function detectColumns(headers) {
-        colIdx = { substation: -1, date: -1, t1A: -1, t2A: -1, t3A: -1, user: -1 };
-        headers.forEach((h, idx) => {
-            const low = h.toLowerCase();
-            if(low.includes('substation') || low === 'substation') colIdx.substation = idx;
-            if(low === 'date' || low.includes('date')) colIdx.date = idx;
-            if(low.includes('t1') && low.includes('a')) colIdx.t1A = idx;
-            if(low.includes('t2') && low.includes('a')) colIdx.t2A = idx;
-            if(low.includes('t3') && low.includes('a')) colIdx.t3A = idx;
-            if(low.includes('operator') || low.includes('user id')) colIdx.user = idx;
-        });
-        if(colIdx.substation === -1 && headers[0]) colIdx.substation = 0;
-        if(colIdx.date === -1 && headers[1]) colIdx.date = 1;
-        if(colIdx.t1A === -1 && headers[7]) colIdx.t1A = 7;
-        if(colIdx.t2A === -1 && headers[8]) colIdx.t2A = 8;
-        if(colIdx.t3A === -1 && headers[9]) colIdx.t3A = 9;
-    }
-
-    function filterAndSortXyzData(rows) {
-        const xyzRows = rows.filter(row => {
-            const substationVal = (colIdx.substation !== -1 && row[colIdx.substation]) ? row[colIdx.substation].toString().trim() : "";
-            return substationVal === "XYZ";
-        });
-        xyzRows.sort((a,b) => {
-            const dateA = (colIdx.date !== -1 ? a[colIdx.date] : "");
-            const dateB = (colIdx.date !== -1 ? b[colIdx.date] : "");
-            const parseDate = (dStr) => {
-                if(!dStr) return new Date(0);
-                let clean = dStr.replace(/\//g, '-');
-                return new Date(clean);
-            };
-            return parseDate(dateB) - parseDate(dateA);
-        });
-        return xyzRows;
-    }
-
-    function computeStats(xyzData) {
-        let allAmps = [];
-        xyzData.forEach(row => {
-            const t1 = colIdx.t1A !== -1 ? parseFloat(row[colIdx.t1A]) : NaN;
-            const t2 = colIdx.t2A !== -1 ? parseFloat(row[colIdx.t2A]) : NaN;
-            const t3 = colIdx.t3A !== -1 ? parseFloat(row[colIdx.t3A]) : NaN;
-            if(!isNaN(t1) && t1>=0) allAmps.push(t1);
-            if(!isNaN(t2) && t2>=0) allAmps.push(t2);
-            if(!isNaN(t3) && t3>=0) allAmps.push(t3);
-        });
-        const peak = allAmps.length ? Math.max(...allAmps) : 0;
-        const avg = allAmps.length ? (allAmps.reduce((s,v)=>s+v,0) / allAmps.length).toFixed(1) : 0;
-        return { peak, avg: parseFloat(avg) };
-    }
-
-    function renderTable(data) {
-        const container = document.getElementById('tableContainer');
-        if(!container) return;
-        if(!data.length) {
-            container.innerHTML = '<div class="empty-state"><h3>📭 No XYZ records found</h3><p>Submit peak load to see data.</p></div>';
-            document.getElementById('statSummary').innerHTML = `<span class="stat-badge"><i class="fas fa-chart-line"></i> Peak: -- A</span>
-                                                               <span class="stat-badge"><i class="fas fa-waveform"></i> Avg: -- A</span>`;
-            return;
+    signInWithEmailAndPassword(auth, email, password)
+      .then(() => {
+        hideLoading();
+        const userEmail = auth.currentUser.email;
+        // routing exactly as original
+        if (userEmail === "mainahiya132ss@gmail.com" || userEmail === "abc2@gmail.com") {
+          window.location.href = "mainahiya.html";
         }
-        const { peak, avg } = computeStats(data);
-        const statDiv = document.getElementById('statSummary');
-        if(statDiv) statDiv.innerHTML = `<span class="stat-badge"><i class="fas fa-chart-line"></i> Peak: ${peak.toFixed(1)} A</span>
-                                         <span class="stat-badge"><i class="fas fa-waveform"></i> Avg: ${avg.toFixed(1)} A</span>`;
-        
-        let html = '<table class="data-table"><thead><tr>';
-        csvHeaders.forEach(h => html += `<th>${escapeHtml(h)}</th>`);
-        html += '</tr></thead><tbody>';
-        data.forEach(row => {
-            html += '<tr>';
-            row.forEach((cell, idx) => {
-                let displayVal = cell === undefined || cell === '' ? '—' : cell;
-                const headerName = csvHeaders[idx] || '';
-                if(headerName.match(/\(A\)|Amps|A$/i) && parseFloat(cell) === 0 && cell !== '—') displayVal = '—';
-                let cls = '';
-                if(headerName.match(/A$|MVA/i)) cls = 'numeric';
-                if(headerName.toLowerCase().includes('timestamp')) cls = 'timestamp-cell';
-                html += `<td class="${cls}">${escapeHtml(displayVal)}</td>`;
-            });
-            html += '</tr>';
-        });
-        html += '</tbody></table>';
-        container.innerHTML = html;
-    }
-
-    async function loadDashboardData() {
-        const container = document.getElementById('tableContainer');
-        if(container) container.innerHTML = '<div class="loading-state"><div class="spinner" style="width:40px;height:40px;border:3px solid #e2e8f0; border-top-color:#3b82f6; border-radius:50%; margin:0 auto 15px;"></div><p>Fetching records...</p></div>';
-        try {
-            const resp = await fetch(CSV_URL, { cache: 'no-store' });
-            if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            const text = await resp.text();
-            const lines = text.trim().split(/\r?\n/);
-            if(lines.length < 2) throw new Error("No data rows");
-            csvHeaders = parseCSVRow(lines[0]);
-            detectColumns(csvHeaders);
-            const rawRows = lines.slice(1).filter(l => l.trim()).map(parseCSVRow);
-            allRawData = rawRows;
-            xyzFilteredSorted = filterAndSortXyzData(rawRows);
-            renderTable(xyzFilteredSorted);
-        } catch(err) {
-            if(container) container.innerHTML = `<div class="empty-state"><h3>⚠️ Load error</h3><p>${escapeHtml(err.message)}</p><button class="refresh-btn" style="margin-top:12px;" onclick="window.refreshDashboardFn?.()">Retry</button></div>`;
+        else if (userEmail === "xyz@gmail.com" || userEmail === "xyz2@gmail.com") {
+          window.location.href = "xyz.html";
         }
-    }
-
-    async function isDuplicateDateForXYZ(dateYmd) {
-        const targetDate = dateYmd.replace(/-/g, '/');
-        try {
-            const resp = await fetch(CSV_URL, { cache: 'no-store' });
-            if(!resp.ok) return false;
-            const text = await resp.text();
-            const lines = text.trim().split(/\r?\n/);
-            if(lines.length < 2) return false;
-            const headers = parseCSVRow(lines[0]);
-            detectColumns(headers);
-            const rows = lines.slice(1).filter(l => l.trim()).map(parseCSVRow);
-            const xyzRecords = rows.filter(row => {
-                const sub = (colIdx.substation !== -1 && row[colIdx.substation]) ? row[colIdx.substation].toString().trim() : "";
-                return sub === "XYZ";
-            });
-            return xyzRecords.some(row => {
-                const recordDateRaw = (colIdx.date !== -1 && row[colIdx.date]) ? row[colIdx.date].toString().trim() : "";
-                return recordDateRaw === targetDate;
-            });
-        } catch(e) {
-            return false;
+        else {
+          window.location.href = "home.html";
         }
+      })
+      .catch(error => {
+        hideLoading();
+        let friendlyMsg = error.message;
+        if (error.code === 'auth/invalid-credential') friendlyMsg = 'Invalid email or password.';
+        showMsg(friendlyMsg);
+      });
+  };
+
+  // Forgot password function
+  window.forgotPassword = function () {
+    const email = document.getElementById("email").value.trim();
+    if (!email) {
+      showMsg("Please enter your email address to reset password.");
+      return;
     }
 
-    const t1 = document.getElementById("t1_amps");
-    const t2 = document.getElementById("t2_amps");
-    const t3 = document.getElementById("t3_amps");
-    const submitBtn = document.getElementById("submitBtn");
-    const resetBtn = document.getElementById("resetBtn");
-    const statusMsg = document.getElementById("statusMsg");
-    const recordDate = document.getElementById("recordDate");
-    const userIdSpan = document.getElementById("userIdDisplay");
-    const inputs = [t1, t2, t3];
-    const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScG9F5CDmCm8k6CIckSfJMxzIUQI8io0942FhyO-6B4lJT7EQ/formResponse";
+    showLoading();
+    sendPasswordResetEmail(auth, email)
+      .then(() => {
+        hideLoading();
+        showMsg("✅ Password reset link sent to your email. Check inbox.", true);
+      })
+      .catch((error) => {
+        hideLoading();
+        showMsg(error.message);
+      });
+  };
 
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, "0");
-    const dd = String(today.getDate()).padStart(2, "0");
-    const defaultInputDate = `${yyyy}-${mm}-${dd}`;
-    if(recordDate) recordDate.value = defaultInputDate;
-
-    const showStatus = (msg, isError = false) => {
-        if(!statusMsg) return;
-        statusMsg.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`;
-        statusMsg.className = `status ${isError ? "error" : "success"}`;
-        if(!isError) setTimeout(() => { if(statusMsg) { statusMsg.innerHTML = `<i class="fas fa-info-circle"></i> Fill at least one transformer's Ampere value.`; statusMsg.className = "status"; } }, 3500);
-    };
-
-    const getDateSlashed = () => recordDate && recordDate.value ? recordDate.value.replace(/-/g, "/") : defaultInputDate.replace(/-/g, "/");
-    const getAmp = (el) => { let v = parseFloat(el?.value); return (!isNaN(v) && v >= 0) ? v : 0; };
-    const hasInput = () => inputs.some(inp => inp && inp.value.trim() !== "");
-    const getOperatorId = () => {
-        if(userIdSpan && userIdSpan.textContent && userIdSpan.textContent !== "LOADING...") return userIdSpan.textContent.trim();
-        const stored = localStorage.getItem("authenticatedUserId");
-        return stored || "NEA_OPERATOR";
-    };
-    const clearFields = () => { inputs.forEach(inp => { if(inp) inp.value = ""; }); if(recordDate) recordDate.value = defaultInputDate; };
-
-    if (submitBtn) {
-        submitBtn.onclick = async () => {
-            if (!hasInput()) { showStatus("Please fill at least one Amp value.", true); return; }
-            const selectedDateRaw = recordDate.value;
-            if(!selectedDateRaw) { showStatus("Select date.", true); return; }
-            const duplicateExists = await isDuplicateDateForXYZ(selectedDateRaw);
-            if(duplicateExists) {
-                showStatus(`❌ Data already exists for ${selectedDateRaw.replace(/-/g, '/')} (XYZ substation). Duplicate not allowed.`, true);
-                return;
-            }
-            const dateSlash = getDateSlashed();
-            const operatorId = getOperatorId();
-            const amps = inputs.map(inp => getAmp(inp));
-            const summary = `⚡ CONFIRM SUBMISSION ⚡\n📍 Substation: XYZ\n📅 Date: ${dateSlash}\n👤 User: ${operatorId}\n\n🔹 T1: ${amps[0]} A\n🔹 T2: ${amps[1]} A\n🔹 T3: ${amps[2]} A\n\n✅ Submit to Google Sheets?`;
-            if (!confirm(summary)) { showStatus("Cancelled.", false); return; }
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Submitting...';
-            
-            const form = document.createElement("form");
-            form.method = "POST";
-            form.action = FORM_URL;
-            form.target = "hidden_google_iframe";
-            form.style.display = "none";
-            const fields = [
-                ["entry.3094480", "XYZ"],
-                ["entry.1525214963", dateSlash],
-                ["entry.538973069", operatorId],
-                ["entry.1124170376", "45"],
-                ["entry.120303341", "46"],
-                ["entry.387659555", "47"],
-                ["entry.1451736055", amps[0]],
-                ["entry.31550722", amps[1]],
-                ["entry.442388986", amps[2]]
-            ];
-            for (let [name, val] of fields) { let inp = document.createElement("input"); inp.type = "hidden"; inp.name = name; inp.value = val; form.appendChild(inp); }
-            document.body.appendChild(form);
-            let submitted = false;
-            const finalize = () => {
-                if(submitted) return;
-                submitted = true;
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Submit Peak Load';
-                clearFields();
-                showStatus("✅ Submitted! Data synced. Dashboard updated.", false);
-                if(form.parentNode) form.remove();
-                if(window.refreshDashboardFn) setTimeout(window.refreshDashboardFn, 900);
-            };
-            const iframeEl = document.querySelector("iframe[name='hidden_google_iframe']");
-            if(iframeEl) iframeEl.onload = finalize;
-            setTimeout(finalize, 1500);
-            form.submit();
-        };
+  // Auto redirect if already logged in (preserve original routing)
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      const userEmail = user.email;
+      if (userEmail === "mainahiya132ss@gmail.com" || userEmail === "abc2@gmail.com") {
+        window.location.href = "mainahiya.html";
+      }
+      else if (userEmail === "xyz@gmail.com" || userEmail === "xyz2@gmail.com") {
+        window.location.href = "xyz.html";
+      }
+      else {
+        window.location.href = "home.html";
+      }
     }
-    if(resetBtn) resetBtn.onclick = () => { clearFields(); showStatus("Fields reset."); };
-    
-    const refreshBtnDash = document.getElementById('refreshBtn');
-    if(refreshBtnDash) refreshBtnDash.addEventListener('click', () => loadDashboardData());
-    window.refreshDashboardFn = loadDashboardData;
-
-    const logoutBtnEl = document.getElementById("logoutBtn");
-    if(logoutBtnEl) logoutBtnEl.onclick = (e) => { e.preventDefault(); if(typeof window.logout === "function") window.logout(); else window.location.href = "index.html"; };
-
-    let chartInstance = null;
-    const modal = document.getElementById('chartModal');
-    const trendBtn = document.getElementById('trendChartBtn');
-    const closeModal = document.getElementById('closeModalBtn');
-    function openTrendChart() {
-        if(!xyzFilteredSorted.length) {
-            alert("No XYZ data available to display trend.");
-            return;
-        }
-        const sortedAsc = [...xyzFilteredSorted].sort((a,b) => {
-            const dateA = colIdx.date !== -1 ? a[colIdx.date] : "";
-            const dateB = colIdx.date !== -1 ? b[colIdx.date] : "";
-            const parseD = d => new Date(d.replace(/\//g, '-'));
-            return parseD(dateA) - parseD(dateB);
-        });
-        const dates = [];
-        const t1data = [], t2data = [], t3data = [];
-        sortedAsc.forEach(row => {
-            const dateVal = (colIdx.date !== -1 && row[colIdx.date]) ? row[colIdx.date] : "";
-            dates.push(dateVal);
-            const t1v = colIdx.t1A !== -1 ? parseFloat(row[colIdx.t1A]) : 0;
-            const t2v = colIdx.t2A !== -1 ? parseFloat(row[colIdx.t2A]) : 0;
-            const t3v = colIdx.t3A !== -1 ? parseFloat(row[colIdx.t3A]) : 0;
-            t1data.push(isNaN(t1v) ? 0 : t1v);
-            t2data.push(isNaN(t2v) ? 0 : t2v);
-            t3data.push(isNaN(t3v) ? 0 : t3v);
-        });
-        const canvas = document.getElementById('trendCanvas');
-        if(chartInstance) chartInstance.destroy();
-        const ctx = canvas.getContext('2d');
-        chartInstance = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: dates,
-                datasets: [
-                    { label: 'T1 Ampere (A)', data: t1data, borderColor: '#dc2626', backgroundColor: 'transparent', tension: 0.2, fill: false, pointRadius: 3 },
-                    { label: 'T2 Ampere (A)', data: t2data, borderColor: '#f59e0b', backgroundColor: 'transparent', tension: 0.2, fill: false, pointRadius: 3 },
-                    { label: 'T3 Ampere (A)', data: t3data, borderColor: '#10b981', backgroundColor: 'transparent', tension: 0.2, fill: false, pointRadius: 3 }
-                ]
-            },
-            options: { responsive: true, maintainAspectRatio: true, plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw} A` } } } }
-        });
-        modal.classList.add('active');
-    }
-    if(trendBtn) trendBtn.addEventListener('click', openTrendChart);
-    if(closeModal) closeModal.addEventListener('click', () => modal.classList.remove('active'));
-    modal.addEventListener('click', (e) => { if(e.target === modal) modal.classList.remove('active'); });
-    
-    loadDashboardData();
+  });
 </script>
 </body>
 </html>
