@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>NEA | XYZ Substation • Peak Load & Live Dashboard</title>
+    <title>NEA | XYZ Substation · Smart Load Manager</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -23,26 +24,23 @@
             min-height: 100vh;
         }
 
-        /* MAIN WRAPPER: two-column layout for larger screens */
         .merged-dashboard {
-            max-width: 1600px;
+            max-width: 1400px;
             width: 100%;
             display: flex;
             flex-direction: column;
             gap: 1.8rem;
         }
 
-        /* both containers share glassmorphic style */
-        .card-panel {
+        /* Cards & panels */
+        .card-panel, .dashboard-panel, .chart-panel {
             background: rgba(255, 255, 255, 0.98);
             border-radius: 32px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
             overflow: hidden;
             backdrop-filter: blur(2px);
-            transition: transform 0.2s ease;
         }
 
-        /* Header / sub-header reuse */
         .header {
             background: linear-gradient(105deg, #006633 0%, #008847 100%);
             padding: 1.4rem 2rem;
@@ -54,16 +52,9 @@
         .header h1 {
             font-size: 1.7rem;
             font-weight: 700;
-            letter-spacing: -0.3px;
             display: flex;
             align-items: center;
             gap: 12px;
-        }
-
-        .header .division {
-            font-size: 0.8rem;
-            opacity: 0.9;
-            font-weight: 500;
         }
 
         .logout-btn {
@@ -83,11 +74,6 @@
             display: flex;
             align-items: center;
             gap: 8px;
-        }
-
-        .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: scale(0.97);
         }
 
         .form-body {
@@ -115,12 +101,7 @@
             background: white;
             padding: 0.4rem 1.2rem;
             border-radius: 60px;
-            color: #1e4a6e;
             border: 1px solid #e9f0f5;
-        }
-
-        .info-item i {
-            color: #FF8C00;
         }
 
         .date-input {
@@ -144,13 +125,11 @@
             padding: 1.3rem;
             border: 1px solid #ecf3f9;
             transition: all 0.25s ease;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
         }
 
         .card:hover {
             border-color: #FF8C00;
             box-shadow: 0 20px 30px -12px rgba(255, 140, 0, 0.12);
-            transform: translateY(-3px);
         }
 
         .card-title {
@@ -165,9 +144,6 @@
             color: #006633;
             font-weight: 700;
             font-size: 1.1rem;
-            display: flex;
-            gap: 8px;
-            align-items: center;
         }
 
         .mva-badge {
@@ -176,7 +152,6 @@
             border-radius: 40px;
             color: #c96200;
             font-weight: 700;
-            font-size: 0.7rem;
         }
 
         .input-wrapper {
@@ -186,12 +161,6 @@
             border: 1.5px solid #e2edf4;
             border-radius: 60px;
             padding: 0.1rem 0.1rem 0.1rem 1.2rem;
-            transition: all 0.2s;
-        }
-
-        .input-wrapper:focus-within {
-            border-color: #FF8C00;
-            box-shadow: 0 0 0 4px rgba(255, 140, 0, 0.1);
         }
 
         .input-wrapper input {
@@ -202,6 +171,16 @@
             background: transparent;
             font-weight: 500;
             font-size: 0.95rem;
+        }
+        /* remove spinner buttons */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+            appearance: textfield;
         }
 
         .unit {
@@ -218,9 +197,10 @@
             gap: 1rem;
             justify-content: center;
             margin: 0.8rem 0 1rem;
+            flex-wrap: wrap;
         }
 
-        .btn-primary, .btn-secondary {
+        .btn-primary, .btn-secondary, .btn-chart {
             border-radius: 60px;
             padding: 0.8rem 1.8rem;
             font-weight: 700;
@@ -237,17 +217,15 @@
             color: white;
             box-shadow: 0 4px 8px rgba(0,102,51,0.25);
         }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-        }
-
         .btn-secondary {
             background: white;
             border: 1.5px solid #FF8C00;
             color: #006633;
         }
-
+        .btn-chart {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+        }
         .status {
             margin-top: 1rem;
             padding: 0.7rem;
@@ -256,203 +234,137 @@
             font-size: 0.8rem;
             background: #f2f6fa;
         }
+        .status.success { background: #e3f7e8; color: #006633; border-left: 4px solid #006633; }
+        .status.error { background: #ffece6; color: #bc4e2c; }
 
-        .status.success {
-            background: #e3f7e8;
-            color: #006633;
-            border-left: 4px solid #006633;
-        }
-
-        .status.error {
-            background: #ffece6;
-            color: #bc4e2c;
-        }
-
-        /* DASHBOARD SECTION (merged style) */
-        .dashboard-panel {
-            background: rgba(255,255,255,0.98);
-            border-radius: 32px;
-            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.2);
-            overflow: hidden;
-        }
-
-        .dash-header {
+        /* Dashboard Table */
+        .dashboard-panel .dash-header, .chart-panel .dash-header {
             background: linear-gradient(135deg, #1e293b, #0f172a);
-            padding: 1.2rem 2rem;
+            padding: 1rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 12px;
             border-bottom: 3px solid #f59e0b;
         }
-
-        .dash-header h2 {
+        .dash-header h2, .chart-panel h2 {
             color: white;
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
-
-        .record-count {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 6px 18px;
+        .stats-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 6px 14px;
             border-radius: 40px;
-            font-weight: 700;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
-
         .refresh-btn {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            background: #3b82f6;
             border: none;
             color: white;
             padding: 8px 20px;
             border-radius: 40px;
             font-weight: 600;
             cursor: pointer;
-            transition: 0.2s;
         }
-
-        .controls {
-            background: #f8fafc;
-            padding: 12px 20px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .controls input {
-            width: 100%;
-            max-width: 400px;
-            padding: 10px 18px;
-            border-radius: 40px;
-            border: 1px solid #cbd5e1;
-            font-size: 0.85rem;
-        }
-
         .table-container {
             overflow-x: auto;
-            max-height: 50vh;
+            max-height: 55vh;
             background: white;
         }
-
         .data-table {
             width: 100%;
             border-collapse: collapse;
             min-width: 1000px;
             font-size: 0.8rem;
         }
-
         .data-table th {
             background: #1e293b;
             color: white;
             padding: 12px 8px;
             position: sticky;
             top: 0;
-            font-weight: 600;
         }
-
         .data-table td {
             padding: 10px 8px;
             text-align: center;
             border-bottom: 1px solid #e2e8f0;
         }
+        .data-table tbody tr:hover { background: #eff6ff; }
+        .zero-placeholder { color: #94a3b8; font-style: italic; }
+        .footer { background: #f1f5f9; padding: 10px; text-align: center; font-size: 0.7rem; }
 
-        .data-table tbody tr:hover {
-            background: #eff6ff;
+        /* Chart modal / inline */
+        .chart-container {
+            padding: 1.5rem;
+            background: white;
+            transition: 0.2s;
         }
-
-        .numeric {
-            font-family: monospace;
-            font-weight: 600;
-        }
-        .high { color: #dc2626; font-weight: 700; }
-        .medium { color: #d97706; }
-        .normal { color: #059669; }
-        .timestamp-cell { font-family: monospace; font-size: 0.7rem; color: #475569; }
-
-        .loading-state, .empty-state { text-align: center; padding: 40px; }
-
-        .footer {
-            background: #f1f5f9;
-            padding: 10px;
-            text-align: center;
-            font-size: 0.7rem;
-            color: #475569;
-        }
-
-        @media(max-width: 900px) {
-            .form-body { padding: 1.2rem; }
-            .logout-btn { top: 0.8rem; right: 1rem; padding: 0.3rem 1rem; font-size: 0.7rem; }
-            .header { padding-right: 5rem; }
-        }
+        canvas { max-height: 300px; width: 100%; }
+        .hidden-chart { display: none; }
+        .trend-btn-active { background: #f59e0b; }
     </style>
 </head>
 <body>
 <div class="merged-dashboard">
-    <!-- PEAK LOAD SUBMISSION FORM (integrated with Firebase Auth + Google Form) -->
+    <!-- SUBMISSION PANEL -->
     <div class="card-panel">
         <div class="header">
             <h1><i class="fas fa-bolt"></i> XYZ Substation</h1>
             <div class="division">Nepal Electricity Authority · Butwal Grid Division (BGD)</div>
-            <div class="sub" style="font-size:0.7rem; opacity:0.8;"><i class="fas fa-chart-line"></i> Daily Peak Load Report</div>
             <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
-
         <div class="form-body">
             <div class="info-bar">
                 <div class="info-item"><i class="fas fa-location-dot"></i> Substation: <strong>XYZ</strong></div>
                 <div class="info-item"><i class="far fa-calendar-alt"></i> Date: <input type="date" id="recordDate" class="date-input"></div>
                 <div class="info-item"><i class="fas fa-user-circle"></i> User ID: <strong id="userIdDisplay">LOADING...</strong></div>
             </div>
-
             <div class="trans-grid">
-                <div class="card">
-                    <div class="card-title"><h3><i class="fas fa-microchip"></i> Transformer 01</h3><span class="mva-badge">45 MVA</span></div>
-                    <div class="input-group"><label>⚡ Peak Load (Amperes)</label><div class="input-wrapper"><input type="number" id="t1_amps" placeholder="Enter current in Amps" step="any"><span class="unit">A</span></div></div>
-                </div>
-                <div class="card">
-                    <div class="card-title"><h3><i class="fas fa-microchip"></i> Transformer 02</h3><span class="mva-badge">46 MVA</span></div>
-                    <div class="input-group"><label>⚡ Peak Load (Amperes)</label><div class="input-wrapper"><input type="number" id="t2_amps" placeholder="Enter current in Amps" step="any"><span class="unit">A</span></div></div>
-                </div>
-                <div class="card">
-                    <div class="card-title"><h3><i class="fas fa-microchip"></i> Transformer 03</h3><span class="mva-badge">47 MVA</span></div>
-                    <div class="input-group"><label>⚡ Peak Load (Amperes)</label><div class="input-wrapper"><input type="number" id="t3_amps" placeholder="Enter current in Amps" step="any"><span class="unit">A</span></div></div>
-                </div>
+                <div class="card"><div class="card-title"><h3><i class="fas fa-microchip"></i> Transformer 01</h3><span class="mva-badge">45 MVA</span></div><div class="input-wrapper"><input type="number" id="t1_amps" placeholder="Peak Amperes" step="any"><span class="unit">A</span></div></div>
+                <div class="card"><div class="card-title"><h3><i class="fas fa-microchip"></i> Transformer 02</h3><span class="mva-badge">46 MVA</span></div><div class="input-wrapper"><input type="number" id="t2_amps" placeholder="Peak Amperes" step="any"><span class="unit">A</span></div></div>
+                <div class="card"><div class="card-title"><h3><i class="fas fa-microchip"></i> Transformer 03</h3><span class="mva-badge">47 MVA</span></div><div class="input-wrapper"><input type="number" id="t3_amps" placeholder="Peak Amperes" step="any"><span class="unit">A</span></div></div>
             </div>
-
             <div class="actions">
                 <button id="submitBtn" class="btn-primary"><i class="fas fa-cloud-upload-alt"></i> Submit Peak Load</button>
                 <button id="resetBtn" class="btn-secondary"><i class="fas fa-undo-alt"></i> Reset Fields</button>
+                <button id="trendBtn" class="btn-chart"><i class="fas fa-chart-line"></i> Trend Analysis (Line Chart)</button>
             </div>
-            <div id="statusMsg" class="status"><i class="fas fa-info-circle"></i> Fill at least one transformer's Ampere value.</div>
-            <div class="footer" style="background:transparent; padding-top:0.5rem;"><i class="fas fa-database"></i> NEA · Butwal Grid Division · Integrated Google Sheets</div>
+            <div id="statusMsg" class="status"><i class="fas fa-info-circle"></i> Fill at least one Ampere value. Duplicate date will be rejected.</div>
         </div>
     </div>
 
-    <!-- LIVE DASHBOARD SECTION (Google Sheets CSV Viewer) -->
+    <!-- DASHBOARD + STATS (XYZ only, latest on top, avg ampere, no search) -->
     <div class="dashboard-panel">
         <div class="dash-header">
-            <h2><i class="fas fa-chart-simple"></i> Substation Monitoring Dashboard</h2>
-            <div style="display: flex; gap: 12px; align-items:center;">
-                <div class="record-count" id="recordCount">0 Records</div>
-                <button class="refresh-btn" id="refreshBtn"><i class="fas fa-sync-alt"></i> Refresh Data</button>
-            </div>
-        </div>
-        <div class="controls">
-            <input type="text" id="searchInput" placeholder="🔍 Search by substation, user ID, date, transformer values...">
+            <h2><i class="fas fa-table-list"></i> XYZ Substation · Historical Records</h2>
+            <div><span class="stats-badge" id="avgAmpereBadge">⚡ Avg Peak A: --</span>
+            <button class="refresh-btn" id="refreshBtn"><i class="fas fa-sync-alt"></i> Sync Data</button></div>
         </div>
         <div class="table-container" id="tableContainer">
-            <div class="loading-state"><div class="spinner" style="width:40px;height:40px;border:3px solid #e2e8f0; border-top-color:#3b82f6; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 15px;"></div><p>Loading records from Google Sheets...</p></div>
+            <div class="loading-state" style="text-align:center; padding:40px;">Loading substation data...</div>
         </div>
-        <div class="footer">Data source: Google Sheets CSV (real-time from form submissions) | Auto-refresh on demand</div>
+        <div class="footer">📌 Only XYZ substation data | Latest entries first | '—' means zero ampere</div>
+    </div>
+
+    <!-- CHART SECTION (hidden until button click) -->
+    <div class="chart-panel hidden-chart" id="chartPanel">
+        <div class="dash-header">
+            <h2><i class="fas fa-chart-line"></i> Transformer Ampere Trend (Last 10 days)</h2>
+            <button id="closeChartBtn" class="refresh-btn" style="background:#475569;">Close</button>
+        </div>
+        <div class="chart-container">
+            <canvas id="trendCanvas" width="400" height="200" style="max-height: 280px; width:100%"></canvas>
+        </div>
     </div>
 </div>
 
 <iframe name="hidden_google_iframe" style="display:none;"></iframe>
 
 <script>
-    // ======================= FIREBASE AUTH MODULE =======================
+    // ----------------------------- FIREBASE AUTH MODULE ---------------------------------
     (function() {
         const firebaseScript = document.createElement('script');
         firebaseScript.type = 'module';
@@ -475,10 +387,7 @@
             window.__firebaseSignOut = signOut;
 
             onAuthStateChanged(auth, (user) => {
-                if (!user) {
-                    window.location.href = "index.html";
-                    return;
-                }
+                if (!user) { window.location.href = "index.html"; return; }
                 const userEmail = user.email || "User";
                 const userIdName = userEmail.split('@')[0].toUpperCase();
                 localStorage.setItem("authenticatedUserId", userIdName);
@@ -486,119 +395,127 @@
                 if (userIdSpan) userIdSpan.textContent = userIdName;
                 window.currentUserId = userIdName;
             });
-
-            window.logout = function() {
-                signOut(auth).then(() => { window.location.href = "index.html"; })
-                        .catch(() => { window.location.href = "index.html"; });
-            };
+            window.logout = function() { signOut(auth).then(() => { window.location.href = "index.html"; }).catch(()=>{ window.location.href = "index.html"; }); };
         `;
         document.head.appendChild(firebaseScript);
     })();
 
-    // ======================= PEAK LOAD SUBMIT LOGIC (Google Forms) =======================
+    // ----------------------------- MAIN APPLICATION ---------------------------------
     (function() {
+        // DOM elements
         const t1 = document.getElementById("t1_amps");
         const t2 = document.getElementById("t2_amps");
         const t3 = document.getElementById("t3_amps");
         const submitBtn = document.getElementById("submitBtn");
         const resetBtn = document.getElementById("resetBtn");
         const statusMsg = document.getElementById("statusMsg");
-        const recordDate = document.getElementById("recordDate");
+        const recordDateInput = document.getElementById("recordDate");
         const userIdSpan = document.getElementById("userIdDisplay");
+        const refreshBtn = document.getElementById("refreshBtn");
+        const trendBtn = document.getElementById("trendBtn");
+        const chartPanel = document.getElementById("chartPanel");
+        const closeChartBtn = document.getElementById("closeChartBtn");
+        
         const inputs = [t1, t2, t3];
         const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScG9F5CDmCm8k6CIckSfJMxzIUQI8io0942FhyO-6B4lJT7EQ/formResponse";
+        // Google Sheets CSV for reading
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/1u268xpWSLvzQQeOhana79NERbkVtu2K2UDG17xR4IAY/export?format=csv";
 
+        let allRecords = [];      // store full raw data objects (filtered for XYZ)
+        let chartInstance = null;
+
+        // Set default date today
         const today = new Date();
         const yyyy = today.getFullYear();
         const mm = String(today.getMonth() + 1).padStart(2, "0");
         const dd = String(today.getDate()).padStart(2, "0");
-        const defaultInputDate = `${yyyy}-${mm}-${dd}`;
-        if (recordDate) recordDate.value = defaultInputDate;
+        const defaultDate = `${yyyy}-${mm}-${dd}`;
+        if (recordDateInput) recordDateInput.value = defaultDate;
+
+        // helper: remove spinner arrows already via CSS
 
         const showStatus = (msg, isError = false) => {
-            if (!statusMsg) return;
+            if(!statusMsg) return;
             statusMsg.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`;
             statusMsg.className = `status ${isError ? "error" : "success"}`;
-            if (!isError) setTimeout(() => { if(statusMsg) { statusMsg.innerHTML = `<i class="fas fa-info-circle"></i> Fill at least one transformer's Ampere value.`; statusMsg.className = "status"; } }, 3000);
+            if(!isError) setTimeout(() => {
+                if(statusMsg) { statusMsg.innerHTML = `<i class="fas fa-info-circle"></i> Fill at least one Ampere value. Duplicate date will be rejected.`; statusMsg.className = "status"; }
+            }, 3500);
         };
 
-        const getDate = () => recordDate && recordDate.value ? recordDate.value.replace(/-/g, "/") : defaultInputDate.replace(/-/g, "/");
-        const getAmp = (el) => { let v = parseFloat(el?.value); return (!isNaN(v) && v >= 0) ? v : 0; };
-        const hasInput = () => inputs.some(inp => inp && inp.value.trim() !== "");
-        
         const getOperatorId = () => {
             if(userIdSpan && userIdSpan.textContent && userIdSpan.textContent !== "LOADING...") return userIdSpan.textContent.trim();
-            const stored = localStorage.getItem("authenticatedUserId");
-            if(stored) return stored;
-            return "NEA_OPERATOR";
+            return localStorage.getItem("authenticatedUserId") || "NEA_OPERATOR";
         };
 
-        const clearFields = () => { inputs.forEach(inp => { if(inp) inp.value = ""; }); if(recordDate) recordDate.value = defaultInputDate; };
-
-        if (submitBtn) {
-            submitBtn.onclick = () => {
-                if (!hasInput()) { showStatus("Please fill at least one Amp value.", true); return; }
-                const date = getDate();
-                const operatorId = getOperatorId();
-                const amps = inputs.map(inp => getAmp(inp));
-                const summary = `⚡ PEAK LOAD SUMMARY ⚡\n📍 Substation: XYZ\n📅 Date: ${date}\n👤 User ID: ${operatorId}\n\n🔹 T1 (45 MVA): ${amps[0]} A\n🔹 T2 (46 MVA): ${amps[1]} A\n🔹 T3 (47 MVA): ${amps[2]} A\n\n✅ Confirm submission to Google Sheets?`;
-                if (!confirm(summary)) { showStatus("Submission cancelled.", false); return; }
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Submitting...';
-                
-                const form = document.createElement("form");
-                form.method = "POST";
-                form.action = FORM_URL;
-                form.target = "hidden_google_iframe";
-                form.style.display = "none";
-                const fields = [
-                    ["entry.3094480", "XYZ"],
-                    ["entry.1525214963", date],
-                    ["entry.538973069", operatorId],
-                    ["entry.1124170376", "45"],
-                    ["entry.120303341", "46"],
-                    ["entry.387659555", "47"],
-                    ["entry.1451736055", amps[0]],
-                    ["entry.31550722", amps[1]],
-                    ["entry.442388986", amps[2]]
-                ];
-                for (let [name, val] of fields) { let inp = document.createElement("input"); inp.type = "hidden"; inp.name = name; inp.value = val; form.appendChild(inp); }
-                document.body.appendChild(form);
-                let submitted = false;
-                const finalize = () => {
-                    if(submitted) return;
-                    submitted = true;
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Submit Peak Load';
-                    clearFields();
-                    showStatus("✅ Submitted successfully! Data synced.", false);
-                    if(form.parentNode) form.remove();
-                    // optional refresh dashboard after submit
-                    if(window.refreshDashboardFn) setTimeout(window.refreshDashboardFn, 800);
-                };
-                const iframeEl = document.querySelector("iframe[name='hidden_google_iframe']");
-                if(iframeEl) iframeEl.onload = finalize;
-                setTimeout(finalize, 1400);
-                form.submit();
-            };
-        }
-        if(resetBtn) resetBtn.onclick = () => { clearFields(); showStatus("All fields reset."); };
-        // Enter nav
-        inputs.forEach((inp, idx) => { if(inp) inp.addEventListener("keydown", (e) => { if(e.key === "Enter") { e.preventDefault(); if(idx < inputs.length-1) inputs[idx+1]?.focus(); else submitBtn?.click(); } }); });
-        // ensure user id display updated from Firebase
-        const userCheck = setInterval(() => { if(userIdSpan && userIdSpan.textContent !== "LOADING..." && userIdSpan.textContent !== "") clearInterval(userCheck); }, 200);
-    })();
-
-    // ======================= DASHBOARD: Google Sheets CSV Loader + Merge =======================
-    (function() {
-        const CSV_URL = "https://docs.google.com/spreadsheets/d/1u268xpWSLvzQQeOhana79NERbkVtu2K2UDG17xR4IAY/export?format=csv";
-        let allData = [];
-        let headers = [];
+        const getDateYMD = () => recordDateInput ? recordDateInput.value : defaultDate;
         
+        // fetch CSV, filter only XYZ substation, sort latest date on top (desc), compute avg peak ampere (average of T1,T2,T3 Amps per row then average across rows)
+        async function fetchAndRenderXYZData() {
+            try {
+                const response = await fetch(CSV_URL, { cache: 'no-store' });
+                if(!response.ok) throw new Error("Network error");
+                const csvText = await response.text();
+                const lines = csvText.trim().split(/\r?\n/);
+                if(lines.length < 2) { renderTable([]); updateAvgBadge([]); return; }
+                
+                // parse headers
+                const headers = parseCSVRow(lines[0]);
+                const timestampIdx = headers.findIndex(h => h.toLowerCase().includes('timestamp'));
+                const substationIdx = headers.findIndex(h => h.toLowerCase().includes('substation') || h === 'Substation');
+                const dateIdx = headers.findIndex(h => h.toLowerCase().includes('date'));
+                const userIdx = headers.findIndex(h => h.toLowerCase().includes('user') || h === 'User ID');
+                // transformer ampere columns order: typically entry for T1,T2,T3 Amps - we identify by position or name
+                const t1aIdx = headers.findIndex(h => h.includes('45') && h.includes('A'));
+                const t2aIdx = headers.findIndex(h => h.includes('46') && h.includes('A'));
+                const t3aIdx = headers.findIndex(h => h.includes('47') && h.includes('A'));
+                // fallback based on pattern: after MVA values we have Amperes
+                let ampIndices = [t1aIdx, t2aIdx, t3aIdx];
+                if(ampIndices.some(i=>i===-1)) {
+                    // try generic: "Transformer 01 A" etc
+                    const possible = headers.map((h,i)=> ({h,i})).filter(({h}) => /Transformer.*A/i.test(h) || /Amperes/i.test(h));
+                    if(possible.length>=3) ampIndices = possible.slice(0,3).map(p=>p.i);
+                }
+                
+                const records = [];
+                for(let i=1; i<lines.length; i++) {
+                    const row = parseCSVRow(lines[i]);
+                    if(row.length < 5) continue;
+                    const substation = substationIdx !== -1 ? row[substationIdx] : row[0];
+                    if(!substation || substation.toUpperCase() !== "XYZ") continue;
+                    let timestamp = timestampIdx !== -1 ? row[timestampIdx] : "";
+                    let dateRaw = dateIdx !== -1 ? row[dateIdx] : "";
+                    let user = userIdx !== -1 ? row[userIdx] : "";
+                    let t1a = ampIndices[0] !== -1 ? parseFloat(row[ampIndices[0]]) : 0;
+                    let t2a = ampIndices[1] !== -1 ? parseFloat(row[ampIndices[1]]) : 0;
+                    let t3a = ampIndices[2] !== -1 ? parseFloat(row[ampIndices[2]]) : 0;
+                    if(isNaN(t1a)) t1a=0; if(isNaN(t2a)) t2a=0; if(isNaN(t3a)) t3a=0;
+                    const peakSum = t1a + t2a + t3a;
+                    const avgPeak = (peakSum / 3).toFixed(1);
+                    records.push({
+                        timestamp, date: dateRaw, user, t1: t1a, t2: t2a, t3: t3a,
+                        avgPeak: parseFloat(avgPeak),
+                        rawDateForSort: dateRaw
+                    });
+                }
+                // sort by date descending (latest first)
+                records.sort((a,b) => {
+                    const dA = new Date(a.date.split('/').reverse().join('-'));
+                    const dB = new Date(b.date.split('/').reverse().join('-'));
+                    return dB - dA;
+                });
+                allRecords = records;
+                renderTable(records);
+                updateAvgBadge(records);
+            } catch(err) {
+                document.getElementById("tableContainer").innerHTML = `<div class="empty-state"><p>⚠️ ${err.message}</p></div>`;
+            }
+        }
+
         function parseCSVRow(rowStr) {
             const res = [];
             let inQuotes = false, cur = '';
-            for(let i=0;i<rowStr.length;i++) {
+            for(let i=0; i<rowStr.length; i++) {
                 const ch = rowStr[i];
                 if(ch === '"') inQuotes = !inQuotes;
                 else if(ch === ',' && !inQuotes) { res.push(cur.trim()); cur = ''; }
@@ -607,79 +524,156 @@
             res.push(cur.trim());
             return res.map(v => v.replace(/^"|"$/g, ''));
         }
-        
-        function escapeHtml(str) { return (str || '').replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
-        
-        function getLoadClass(val) { let num = parseFloat(val); if(isNaN(num)) return ''; if(num > 50) return 'high'; if(num > 30) return 'medium'; return 'normal'; }
-        
-        function renderTable(data) {
-            const container = document.getElementById('tableContainer');
-            const recSpan = document.getElementById('recordCount');
+
+        function renderTable(records) {
+            const container = document.getElementById("tableContainer");
             if(!container) return;
-            if(!data.length) { container.innerHTML = '<div class="empty-state"><h3>📭 No records found</h3><p>Submit peak load to see data.</p></div>'; if(recSpan) recSpan.textContent = '0 Records'; return; }
-            if(recSpan) recSpan.textContent = `${data.length} Records`;
-            let html = '<table class="data-table"><thead><tr>';
-            headers.forEach(h => html += `<th>${escapeHtml(h)}</th>`);
-            html += '</tr></thead><tbody>';
-            data.forEach(row => {
-                html += '<tr>';
-                row.forEach((cell, idx) => {
-                    let cls = '';
-                    let headerName = headers[idx] || '';
-                    if(/A$|MVA/i.test(headerName)) cls = `numeric ${getLoadClass(cell)}`;
-                    if(/timestamp/i.test(headerName)) cls = 'timestamp-cell';
-                    html += `<td class="${cls}">${escapeHtml(cell || '—')}</td>`;
-                });
-                html += '</tr>';
+            if(records.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding:40px; text-align:center;">📭 No records for XYZ substation yet. Submit first peak load.</div>';
+                return;
+            }
+            let html = `<table class="data-table"><thead><tr><th>Timestamp</th><th>Date</th><th>User ID</th><th>T1 (45 MVA) A</th><th>T2 (46 MVA) A</th><th>T3 (47 MVA) A</th><th>Avg Peak (A)</th></tr></thead><tbody>`;
+            records.forEach(rec => {
+                const displayVal = (val) => (val === 0 || val === "0") ? '<span class="zero-placeholder">—</span>' : val;
+                html += `<tr>
+                    <td class="timestamp-cell">${escapeHtml(rec.timestamp || '—')}</td>
+                    <td>${escapeHtml(rec.date || '—')}</td>
+                    <td>${escapeHtml(rec.user || '—')}</td>
+                    <td class="numeric">${displayVal(rec.t1)}</td>
+                    <td class="numeric">${displayVal(rec.t2)}</td>
+                    <td class="numeric">${displayVal(rec.t3)}</td>
+                    <td class="numeric"><strong>${rec.avgPeak.toFixed(1)} A</strong></td>
+                </tr>`;
             });
-            html += '</tbody></table>';
+            html += `</tbody></table>`;
             container.innerHTML = html;
         }
-        
-        async function loadDashboardData() {
-            const container = document.getElementById('tableContainer');
-            if(container) container.innerHTML = '<div class="loading-state"><div class="spinner" style="width:40px;height:40px;border:3px solid #e2e8f0; border-top-color:#3b82f6; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 15px;"></div><p>Fetching latest submissions...</p></div>';
-            try {
-                const resp = await fetch(CSV_URL, { cache: 'no-store' });
-                if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
-                const text = await resp.text();
-                const lines = text.trim().split(/\r?\n/);
-                if(lines.length < 1) throw new Error("Empty CSV");
-                headers = parseCSVRow(lines[0]);
-                allData = lines.slice(1).filter(l => l.trim()).map(parseCSVRow);
-                renderTable(allData);
-            } catch(err) {
-                if(container) container.innerHTML = `<div class="empty-state"><h3>⚠️ Load error</h3><p>${escapeHtml(err.message)}</p><button class="refresh-btn" style="margin-top:12px;" onclick="window.refreshDashboardFn?.()">Retry</button></div>`;
-            }
+
+        function updateAvgBadge(records) {
+            const badge = document.getElementById("avgAmpereBadge");
+            if(!badge) return;
+            if(records.length === 0) { badge.innerHTML = `⚡ Avg Peak A: N/A`; return; }
+            const totalAvg = records.reduce((sum, r) => sum + r.avgPeak, 0) / records.length;
+            badge.innerHTML = `⚡ Avg Peak A: ${totalAvg.toFixed(1)} A (${records.length} days)`;
+        }
+
+        function escapeHtml(str) { return String(str || '').replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+
+        // check if data already exists for selected date (prevent duplicate submission)
+        async function isDuplicateDate(dateYMD) {
+            // dateYMD format = "YYYY-MM-DD", but stored date in sheets as DD/MM/YYYY or similar. try both.
+            const targetDateObj = new Date(dateYMD);
+            const targetStrDDMM = `${String(targetDateObj.getDate()).padStart(2,'0')}/${String(targetDateObj.getMonth()+1).padStart(2,'0')}/${targetDateObj.getFullYear()}`;
+            const targetStrMMDD = `${String(targetDateObj.getMonth()+1).padStart(2,'0')}/${String(targetDateObj.getDate()).padStart(2,'0')}/${targetDateObj.getFullYear()}`;
+            return allRecords.some(rec => rec.date === targetStrDDMM || rec.date === targetStrMMDD || rec.date === dateYMD);
+        }
+
+        // Submit with duplication check
+        if(submitBtn) {
+            submitBtn.onclick = async () => {
+                const selectedDate = getDateYMD();
+                if(!selectedDate) { showStatus("Select a valid date", true); return; }
+                const hasAny = inputs.some(inp => inp && inp.value.trim() !== "");
+                if(!hasAny) { showStatus("Please fill at least one Ampere value.", true); return; }
+                
+                // Refresh records first to check latest data (avoid offline duplicate)
+                await fetchAndRenderXYZData();
+                const duplicate = await isDuplicateDate(selectedDate);
+                if(duplicate) {
+                    showStatus(`❌ Submission rejected: Data for ${selectedDate} already exists for XYZ substation. Duplicate not allowed.`, true);
+                    return;
+                }
+                
+                const operator = getOperatorId();
+                const dateSlash = selectedDate.replace(/-/g, "/");
+                const amps = inputs.map(inp => { let v = parseFloat(inp?.value); return (!isNaN(v) && v>=0) ? v : 0; });
+                
+                const confirmMsg = `📅 Date: ${selectedDate}\n👤 Operator: ${operator}\nT1: ${amps[0]} A | T2: ${amps[1]} A | T3: ${amps[2]} A\n✅ No duplicate found. Submit?`;
+                if(!confirm(confirmMsg)) return;
+                
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Saving...';
+                const form = document.createElement("form");
+                form.method = "POST";
+                form.action = FORM_URL;
+                form.target = "hidden_google_iframe";
+                form.style.display = "none";
+                const fields = [
+                    ["entry.3094480", "XYZ"],
+                    ["entry.1525214963", dateSlash],
+                    ["entry.538973069", operator],
+                    ["entry.1124170376", "45"],
+                    ["entry.120303341", "46"],
+                    ["entry.387659555", "47"],
+                    ["entry.1451736055", amps[0]],
+                    ["entry.31550722", amps[1]],
+                    ["entry.442388986", amps[2]]
+                ];
+                fields.forEach(([name,val]) => { let inp = document.createElement("input"); inp.type="hidden"; inp.name=name; inp.value=val; form.appendChild(inp); });
+                document.body.appendChild(form);
+                let finished = false;
+                const finalize = () => {
+                    if(finished) return;
+                    finished = true;
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Submit Peak Load';
+                    clearInputFields();
+                    showStatus("✅ Submitted & synced! Data recorded.", false);
+                    if(form.parentNode) form.remove();
+                    setTimeout(() => fetchAndRenderXYZData(), 700);
+                };
+                const iframeEl = document.querySelector("iframe[name='hidden_google_iframe']");
+                if(iframeEl) iframeEl.onload = finalize;
+                setTimeout(finalize, 1500);
+                form.submit();
+            };
         }
         
-        const refreshBtn = document.getElementById('refreshBtn');
-        if(refreshBtn) refreshBtn.addEventListener('click', () => loadDashboardData());
-        const searchInput = document.getElementById('searchInput');
-        if(searchInput) {
-            searchInput.addEventListener('input', function() {
-                const term = this.value.toLowerCase();
-                const filtered = allData.filter(row => row.join(' ').toLowerCase().includes(term));
-                renderTable(filtered);
+        function clearInputFields() { inputs.forEach(inp => { if(inp) inp.value = ""; }); if(recordDateInput) recordDateInput.value = defaultDate; }
+        if(resetBtn) resetBtn.onclick = () => { clearInputFields(); showStatus("Fields reset", false); };
+        
+        // Trend Analysis: line chart for T1,T2,T3 over last 10 entries (latest to oldest but chart shows chronological)
+        function showTrendChart() {
+            if(allRecords.length === 0) { showStatus("No data to display trend", true); return; }
+            chartPanel.classList.remove("hidden-chart");
+            const sortedChrono = [...allRecords].reverse(); // earliest first for chart X axis
+            const limited = sortedChrono.slice(-10);
+            const labels = limited.map(r => r.date || "unknown");
+            const t1Data = limited.map(r => r.t1);
+            const t2Data = limited.map(r => r.t2);
+            const t3Data = limited.map(r => r.t3);
+            const ctx = document.getElementById("trendCanvas").getContext("2d");
+            if(chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'T1 (45 MVA) Ampere', data: t1Data, borderColor: '#dc2626', backgroundColor: 'transparent', tension: 0.2, fill: false },
+                        { label: 'T2 (46 MVA) Ampere', data: t2Data, borderColor: '#f59e0b', backgroundColor: 'transparent', tension: 0.2, fill: false },
+                        { label: 'T3 (47 MVA) Ampere', data: t3Data, borderColor: '#10b981', backgroundColor: 'transparent', tension: 0.2, fill: false }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw} A` } } } }
             });
         }
-        window.refreshDashboardFn = loadDashboardData;
-        loadDashboardData();
+        if(trendBtn) trendBtn.onclick = () => { if(allRecords.length) showTrendChart(); else showStatus("No records yet for trend", true); };
+        if(closeChartBtn) closeChartBtn.onclick = () => { chartPanel.classList.add("hidden-chart"); if(chartInstance) chartInstance.destroy(); chartInstance=null; };
+        
+        if(refreshBtn) refreshBtn.onclick = () => fetchAndRenderXYZData();
+        
+        // initial load & auth observer
+        const waitForUser = setInterval(() => {
+            if(userIdSpan && userIdSpan.textContent !== "LOADING...") {
+                clearInterval(waitForUser);
+                fetchAndRenderXYZData();
+            }
+        }, 200);
+        setTimeout(() => { if(userIdSpan?.textContent === "LOADING...") fetchAndRenderXYZData(); }, 1200);
+        
+        const logout = document.getElementById("logoutBtn");
+        if(logout) logout.onclick = () => { if(window.logout) window.logout(); else window.location.href="index.html"; };
     })();
-
-    // logout handler
-    const logoutBtn = document.getElementById("logoutBtn");
-    if(logoutBtn) {
-        logoutBtn.onclick = (e) => {
-            e.preventDefault();
-            if(typeof window.logout === "function") window.logout();
-            else window.location.href = "index.html";
-        };
-    }
-    // extra style for spinner keyframes if missing
-    const styleSpin = document.createElement('style');
-    styleSpin.textContent = `@keyframes spin { to { transform: rotate(360deg); } }`;
-    document.head.appendChild(styleSpin);
 </script>
 </body>
 </html>
