@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>NEA | XYZ Substation · Smart Load Manager</title>
+    <title>NEA • XYZ Substation | Peak Load & Analytics</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
@@ -25,18 +26,19 @@
         }
 
         .merged-dashboard {
-            max-width: 1400px;
+            max-width: 1600px;
             width: 100%;
             display: flex;
             flex-direction: column;
             gap: 1.8rem;
         }
 
-        .card-panel, .dashboard-panel, .chart-panel {
+        .card-panel, .dashboard-panel {
             background: rgba(255, 255, 255, 0.98);
             border-radius: 32px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
             overflow: hidden;
+            backdrop-filter: blur(2px);
         }
 
         .header {
@@ -50,6 +52,7 @@
         .header h1 {
             font-size: 1.7rem;
             font-weight: 700;
+            letter-spacing: -0.3px;
             display: flex;
             align-items: center;
             gap: 12px;
@@ -72,6 +75,11 @@
             display: flex;
             align-items: center;
             gap: 8px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0.97);
         }
 
         .form-body {
@@ -99,6 +107,7 @@
             background: white;
             padding: 0.4rem 1.2rem;
             border-radius: 60px;
+            color: #1e4a6e;
             border: 1px solid #e9f0f5;
         }
 
@@ -144,12 +153,15 @@
             font-size: 1.1rem;
         }
 
-        .mva-badge {
-            background: linear-gradient(135deg, #fff3e6, #ffe8d9);
-            padding: 0.25rem 0.8rem;
-            border-radius: 40px;
-            color: #c96200;
-            font-weight: 700;
+        /* remove spinner from number inputs */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+            appearance: textfield;
         }
 
         .input-wrapper {
@@ -159,6 +171,12 @@
             border: 1.5px solid #e2edf4;
             border-radius: 60px;
             padding: 0.1rem 0.1rem 0.1rem 1.2rem;
+            transition: all 0.2s;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: #FF8C00;
+            box-shadow: 0 0 0 4px rgba(255, 140, 0, 0.1);
         }
 
         .input-wrapper input {
@@ -169,17 +187,6 @@
             background: transparent;
             font-weight: 500;
             font-size: 0.95rem;
-        }
-
-        /* Remove spinner buttons from number inputs */
-        input[type=number]::-webkit-inner-spin-button,
-        input[type=number]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        input[type=number] {
-            -moz-appearance: textfield;
-            appearance: textfield;
         }
 
         .unit {
@@ -196,10 +203,9 @@
             gap: 1rem;
             justify-content: center;
             margin: 0.8rem 0 1rem;
-            flex-wrap: wrap;
         }
 
-        .btn-primary, .btn-secondary, .btn-chart {
+        .btn-primary, .btn-secondary {
             border-radius: 60px;
             padding: 0.8rem 1.8rem;
             font-weight: 700;
@@ -216,15 +222,17 @@
             color: white;
             box-shadow: 0 4px 8px rgba(0,102,51,0.25);
         }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+
         .btn-secondary {
             background: white;
             border: 1.5px solid #FF8C00;
             color: #006633;
         }
-        .btn-chart {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            color: white;
-        }
+
         .status {
             margin-top: 1rem;
             padding: 0.7rem;
@@ -233,33 +241,89 @@
             font-size: 0.8rem;
             background: #f2f6fa;
         }
-        .status.success { background: #e3f7e8; color: #006633; border-left: 4px solid #006633; }
-        .status.error { background: #ffece6; color: #bc4e2c; }
 
-        .dashboard-panel .dash-header, .chart-panel .dash-header {
+        .status.success {
+            background: #e3f7e8;
+            color: #006633;
+            border-left: 4px solid #006633;
+        }
+
+        .status.error {
+            background: #ffece6;
+            color: #bc4e2c;
+        }
+
+        /* DASHBOARD SECTION */
+        .dashboard-panel {
+            background: rgba(255,255,255,0.98);
+            border-radius: 32px;
+            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.2);
+        }
+
+        .dash-header {
             background: linear-gradient(135deg, #1e293b, #0f172a);
-            padding: 1rem 2rem;
+            padding: 1.2rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
+            gap: 12px;
             border-bottom: 3px solid #f59e0b;
         }
+
         .dash-header h2 {
             color: white;
-            font-size: 1.3rem;
+            font-size: 1.5rem;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
-        .stats-badge {
-            background: rgba(255,255,255,0.2);
-            padding: 6px 14px;
-            border-radius: 40px;
+
+        .stats-summary {
+            display: flex;
+            gap: 1.2rem;
+            background: rgba(255,255,255,0.1);
+            padding: 0.4rem 1rem;
+            border-radius: 48px;
+            flex-wrap: wrap;
+        }
+
+        .stat-badge {
+            color: white;
+            font-weight: 600;
             font-size: 0.8rem;
+            background: rgba(0,0,0,0.3);
+            padding: 0.3rem 1rem;
+            border-radius: 32px;
+            backdrop-filter: blur(4px);
         }
+
+        .stat-badge i {
+            margin-right: 6px;
+            color: #f59e0b;
+        }
+
+        .btn-chart {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border: none;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-chart:hover {
+            transform: scale(0.97);
+            background: #d97706;
+        }
+
         .refresh-btn {
-            background: #3b82f6;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
             border: none;
             color: white;
             padding: 8px 20px;
@@ -267,99 +331,183 @@
             font-weight: 600;
             cursor: pointer;
         }
+
         .table-container {
             overflow-x: auto;
             max-height: 55vh;
             background: white;
         }
+
         .data-table {
             width: 100%;
             border-collapse: collapse;
             min-width: 1000px;
             font-size: 0.8rem;
         }
+
         .data-table th {
             background: #1e293b;
             color: white;
             padding: 12px 8px;
             position: sticky;
             top: 0;
+            font-weight: 600;
         }
+
         .data-table td {
             padding: 10px 8px;
             text-align: center;
             border-bottom: 1px solid #e2e8f0;
         }
-        .data-table tbody tr:hover { background: #eff6ff; }
-        .zero-placeholder { color: #94a3b8; font-style: italic; }
-        .footer { background: #f1f5f9; padding: 10px; text-align: center; font-size: 0.7rem; }
 
-        .chart-container {
-            padding: 1.5rem;
-            background: white;
+        .data-table tbody tr:hover {
+            background: #eff6ff;
         }
-        canvas { max-height: 300px; width: 100%; }
-        .hidden-chart { display: none; }
+        .numeric {
+            font-family: monospace;
+            font-weight: 600;
+        }
+        .timestamp-cell {
+            font-family: monospace;
+            font-size: 0.7rem;
+            color: #475569;
+        }
+        .loading-state, .empty-state {
+            text-align: center;
+            padding: 40px;
+        }
+        .footer {
+            background: #f1f5f9;
+            padding: 10px;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #475569;
+        }
+
+        /* MODAL STYLES */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.2s;
+        }
+        .modal-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .modal-card {
+            background: white;
+            border-radius: 32px;
+            max-width: 90vw;
+            width: 900px;
+            padding: 1.5rem;
+            box-shadow: 0 30px 40px rgba(0,0,0,0.4);
+            position: relative;
+        }
+        .modal-card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            border-left: 5px solid #f59e0b;
+            padding-left: 1rem;
+        }
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #64748b;
+        }
+        canvas {
+            max-height: 400px;
+            width: 100%;
+        }
+        @media (max-width: 700px) {
+            .form-body { padding: 1rem; }
+            .stats-summary { margin-top: 8px; }
+        }
     </style>
 </head>
 <body>
 <div class="merged-dashboard">
-    <!-- SUBMISSION PANEL -->
+    <!-- PEAK LOAD SUBMISSION FORM -->
     <div class="card-panel">
         <div class="header">
             <h1><i class="fas fa-bolt"></i> XYZ Substation</h1>
             <div class="division">Nepal Electricity Authority · Butwal Grid Division (BGD)</div>
+            <div class="sub" style="font-size:0.7rem; opacity:0.8;"><i class="fas fa-chart-line"></i> Daily Peak Load Report</div>
             <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
         <div class="form-body">
             <div class="info-bar">
                 <div class="info-item"><i class="fas fa-location-dot"></i> Substation: <strong>XYZ</strong></div>
                 <div class="info-item"><i class="far fa-calendar-alt"></i> Date: <input type="date" id="recordDate" class="date-input"></div>
-                <div class="info-item"><i class="fas fa-user-circle"></i> User ID: <strong id="userIdDisplay">OPERATOR</strong></div>
+                <div class="info-item"><i class="fas fa-user-circle"></i> User ID: <strong id="userIdDisplay">LOADING...</strong></div>
             </div>
             <div class="trans-grid">
-                <div class="card"><div class="card-title"><h3><i class="fas fa-microchip"></i> Transformer 01</h3><span class="mva-badge">45 MVA</span></div><div class="input-wrapper"><input type="number" id="t1_amps" placeholder="Peak Amperes" step="any"><span class="unit">A</span></div></div>
-                <div class="card"><div class="card-title"><h3><i class="fas fa-microchip"></i> Transformer 02</h3><span class="mva-badge">46 MVA</span></div><div class="input-wrapper"><input type="number" id="t2_amps" placeholder="Peak Amperes" step="any"><span class="unit">A</span></div></div>
-                <div class="card"><div class="card-title"><h3><i class="fas fa-microchip"></i> Transformer 03</h3><span class="mva-badge">47 MVA</span></div><div class="input-wrapper"><input type="number" id="t3_amps" placeholder="Peak Amperes" step="any"><span class="unit">A</span></div></div>
+                <div class="card">
+                    <div class="card-title"><h3><i class="fas fa-microchip"></i> Transformer 01</h3><span class="mva-badge" style="background:#eef2ff;">45 MVA</span></div>
+                    <div class="input-wrapper"><input type="number" id="t1_amps" placeholder="Peak Amperes" step="any"><span class="unit">A</span></div>
+                </div>
+                <div class="card">
+                    <div class="card-title"><h3><i class="fas fa-microchip"></i> Transformer 02</h3><span class="mva-badge" style="background:#eef2ff;">46 MVA</span></div>
+                    <div class="input-wrapper"><input type="number" id="t2_amps" placeholder="Peak Amperes" step="any"><span class="unit">A</span></div>
+                </div>
+                <div class="card">
+                    <div class="card-title"><h3><i class="fas fa-microchip"></i> Transformer 03</h3><span class="mva-badge" style="background:#eef2ff;">47 MVA</span></div>
+                    <div class="input-wrapper"><input type="number" id="t3_amps" placeholder="Peak Amperes" step="any"><span class="unit">A</span></div>
+                </div>
             </div>
             <div class="actions">
                 <button id="submitBtn" class="btn-primary"><i class="fas fa-cloud-upload-alt"></i> Submit Peak Load</button>
                 <button id="resetBtn" class="btn-secondary"><i class="fas fa-undo-alt"></i> Reset Fields</button>
-                <button id="trendBtn" class="btn-chart"><i class="fas fa-chart-line"></i> Trend Analysis</button>
             </div>
-            <div id="statusMsg" class="status"><i class="fas fa-info-circle"></i> Fill at least one Ampere value. Duplicate dates rejected.</div>
+            <div id="statusMsg" class="status"><i class="fas fa-info-circle"></i> Fill at least one transformer Ampere value.</div>
         </div>
     </div>
 
-    <!-- DASHBOARD - XYZ only, no search box, latest on top, avg display -->
+    <!-- LIVE DASHBOARD (XYZ only, no search) -->
     <div class="dashboard-panel">
         <div class="dash-header">
-            <h2><i class="fas fa-table-list"></i> XYZ Substation · Historical Records</h2>
-            <div><span class="stats-badge" id="avgAmpereBadge">⚡ Avg Peak: --</span>
-            <button class="refresh-btn" id="refreshBtn"><i class="fas fa-sync-alt"></i> Refresh</button></div>
+            <h2><i class="fas fa-chart-simple"></i> Substation Monitoring · XYZ Data</h2>
+            <div style="display: flex; gap: 12px; align-items:center;">
+                <div class="stats-summary" id="statSummary">
+                    <span class="stat-badge"><i class="fas fa-chart-line"></i> Peak: -- A</span>
+                    <span class="stat-badge"><i class="fas fa-waveform"></i> Avg: -- A</span>
+                </div>
+                <button id="trendChartBtn" class="btn-chart"><i class="fas fa-chart-line"></i> Trend Analysis</button>
+                <button id="refreshBtn" class="refresh-btn"><i class="fas fa-sync-alt"></i> Refresh</button>
+            </div>
         </div>
         <div class="table-container" id="tableContainer">
-            <div class="loading-state" style="text-align:center; padding:40px;">Loading XYZ substation data...</div>
+            <div class="loading-state"><div class="spinner" style="width:40px;height:40px;border:3px solid #e2e8f0; border-top-color:#3b82f6; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 15px;"></div><p>Loading records from Google Sheets...</p></div>
         </div>
-        <div class="footer">📌 Only XYZ substation data | Latest date first | '—' means zero ampere</div>
+        <div class="footer">Data source: Google Sheets (real-time) | Latest records first | Zero Amps shown as —</div>
     </div>
+</div>
 
-    <!-- CHART PANEL (hidden initially) -->
-    <div class="chart-panel hidden-chart" id="chartPanel">
-        <div class="dash-header">
-            <h2><i class="fas fa-chart-line"></i> Transformer Ampere Trend (Chronological)</h2>
-            <button id="closeChartBtn" class="refresh-btn" style="background:#475569;">Close</button>
-        </div>
-        <div class="chart-container">
-            <canvas id="trendCanvas"></canvas>
-        </div>
+<!-- Chart Modal -->
+<div id="chartModal" class="modal-overlay">
+    <div class="modal-card">
+        <span class="close-modal" id="closeModalBtn">&times;</span>
+        <h3><i class="fas fa-chart-line" style="color:#f59e0b;"></i> Transformer Ampere Trend (XYZ Substation)</h3>
+        <canvas id="trendCanvas" width="800" height="400" style="width:100%; height:auto; max-height:400px;"></canvas>
+        <p style="font-size:0.7rem; margin-top:12px; text-align:center;">📈 Trend over time (Date) — T1, T2, T3 Peak Amperes</p>
     </div>
 </div>
 
 <iframe name="hidden_google_iframe" style="display:none;"></iframe>
 
 <script>
-    // ======================= FIREBASE AUTH MODULE =======================
+    // ======================= FIREBASE AUTH (unchanged) =======================
     (function() {
         const firebaseScript = document.createElement('script');
         firebaseScript.type = 'module';
@@ -402,351 +550,329 @@
         document.head.appendChild(firebaseScript);
     })();
 
-    // ======================= MAIN APPLICATION (XYZ Only) =======================
-    (function() {
-        // DOM Elements
-        const t1 = document.getElementById("t1_amps");
-        const t2 = document.getElementById("t2_amps");
-        const t3 = document.getElementById("t3_amps");
-        const submitBtn = document.getElementById("submitBtn");
-        const resetBtn = document.getElementById("resetBtn");
-        const statusMsg = document.getElementById("statusMsg");
-        const recordDateInput = document.getElementById("recordDate");
-        const userIdSpan = document.getElementById("userIdDisplay");
-        const refreshBtn = document.getElementById("refreshBtn");
-        const trendBtn = document.getElementById("trendBtn");
-        const chartPanel = document.getElementById("chartPanel");
-        const closeChartBtn = document.getElementById("closeChartBtn");
-        
-        const inputs = [t1, t2, t3];
-        const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScG9F5CDmCm8k6CIckSfJMxzIUQI8io0942FhyO-6B4lJT7EQ/formResponse";
-        const CSV_URL = "https://docs.google.com/spreadsheets/d/1u268xpWSLvzQQeOhana79NERbkVtu2K2UDG17xR4IAY/export?format=csv";
+    // ======================= GLOBALS =======================
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/1u268xpWSLvzQQeOhana79NERbkVtu2K2UDG17xR4IAY/export?format=csv";
+    let xyzFilteredSorted = [];    // only XYZ substation records, sorted date desc
+    let allRawData = [];
+    let csvHeaders = [];
 
-        let xyzRecords = [];      // stores only XYZ substation records (enriched objects)
-        let chartInstance = null;
-        
-        // Set default date to today
-        const today = new Date();
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, "0");
-        const dd = String(today.getDate()).padStart(2, "0");
-        const defaultDate = `${yyyy}-${mm}-${dd}`;
-        if (recordDateInput) recordDateInput.value = defaultDate;
-
-        const showStatus = (msg, isError = false) => {
-            if (!statusMsg) return;
-            statusMsg.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`;
-            statusMsg.className = `status ${isError ? "error" : "success"}`;
-            if (!isError) {
-                setTimeout(() => {
-                    if (statusMsg) {
-                        statusMsg.innerHTML = `<i class="fas fa-info-circle"></i> Fill at least one Ampere value. Duplicate dates rejected.`;
-                        statusMsg.className = "status";
-                    }
-                }, 3000);
-            }
-        };
-
-        const getOperatorId = () => {
-            if (userIdSpan && userIdSpan.textContent && userIdSpan.textContent !== "LOADING...") 
-                return userIdSpan.textContent.trim();
-            return localStorage.getItem("authenticatedUserId") || "NEA_OPERATOR";
-        };
-
-        // Parse CSV row respecting quotes
-        function parseCSVRow(rowStr) {
-            const res = [];
-            let inQuotes = false, cur = '';
-            for (let i = 0; i < rowStr.length; i++) {
-                const ch = rowStr[i];
-                if (ch === '"') inQuotes = !inQuotes;
-                else if (ch === ',' && !inQuotes) { res.push(cur.trim()); cur = ''; }
-                else cur += ch;
-            }
-            res.push(cur.trim());
-            return res.map(v => v.replace(/^"|"$/g, ''));
+    // Helper: parse CSV row respecting quotes
+    function parseCSVRow(rowStr) {
+        const res = [];
+        let inQuotes = false, cur = '';
+        for(let i=0;i<rowStr.length;i++) {
+            const ch = rowStr[i];
+            if(ch === '"') inQuotes = !inQuotes;
+            else if(ch === ',' && !inQuotes) { res.push(cur.trim()); cur = ''; }
+            else cur += ch;
         }
+        res.push(cur.trim());
+        return res.map(v => v.replace(/^"|"$/g, ''));
+    }
 
-        function escapeHtml(str) { return String(str || '').replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
-        
-        // Fetch, filter ONLY XYZ, compute average per record, sort latest first
-        async function fetchXYZData() {
-            try {
-                const response = await fetch(CSV_URL, { cache: 'no-store' });
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const csvText = await response.text();
-                const lines = csvText.trim().split(/\r?\n/);
-                if (lines.length < 2) {
-                    xyzRecords = [];
-                    renderTable();
-                    updateAvgBadge();
-                    return;
-                }
-                
-                const headers = parseCSVRow(lines[0]);
-                // Find column indices
-                const substationIdx = headers.findIndex(h => h.toLowerCase().includes('substation'));
-                const timestampIdx = headers.findIndex(h => h.toLowerCase().includes('timestamp'));
-                const dateIdx = headers.findIndex(h => h.toLowerCase().includes('date'));
-                const userIdx = headers.findIndex(h => h.toLowerCase().includes('user') || h === 'User ID');
-                // Ampere columns: search for patterns like "45 MVA" or "Transformer 01"
-                const t1Idx = headers.findIndex(h => (h.includes('45') && h.includes('A')) || h.toLowerCase().includes('transformer 01'));
-                const t2Idx = headers.findIndex(h => (h.includes('46') && h.includes('A')) || h.toLowerCase().includes('transformer 02'));
-                const t3Idx = headers.findIndex(h => (h.includes('47') && h.includes('A')) || h.toLowerCase().includes('transformer 03'));
-                
-                const records = [];
-                for (let i = 1; i < lines.length; i++) {
-                    const row = parseCSVRow(lines[i]);
-                    if (row.length < 5) continue;
-                    // Substation filter: must be "XYZ"
-                    let substation = (substationIdx !== -1) ? row[substationIdx] : row[0];
-                    if (!substation || substation.toUpperCase() !== "XYZ") continue;
-                    
-                    let timestamp = timestampIdx !== -1 ? row[timestampIdx] : "";
-                    let dateRaw = dateIdx !== -1 ? row[dateIdx] : "";
-                    let user = userIdx !== -1 ? row[userIdx] : "";
-                    let t1a = (t1Idx !== -1) ? parseFloat(row[t1Idx]) : 0;
-                    let t2a = (t2Idx !== -1) ? parseFloat(row[t2Idx]) : 0;
-                    let t3a = (t3Idx !== -1) ? parseFloat(row[t3Idx]) : 0;
-                    if (isNaN(t1a)) t1a = 0;
-                    if (isNaN(t2a)) t2a = 0;
-                    if (isNaN(t3a)) t3a = 0;
-                    
-                    const avgPeak = (t1a + t2a + t3a) / 3;
-                    records.push({
-                        timestamp: timestamp,
-                        date: dateRaw,
-                        user: user,
-                        t1: t1a,
-                        t2: t2a,
-                        t3: t3a,
-                        avgPeak: avgPeak,
-                        sortDate: dateRaw
-                    });
-                }
-                // Sort by date descending (latest first)
-                records.sort((a, b) => {
-                    const dateA = new Date(a.date.split('/').reverse().join('-'));
-                    const dateB = new Date(b.date.split('/').reverse().join('-'));
-                    return dateB - dateA;
-                });
-                xyzRecords = records;
-                renderTable();
-                updateAvgBadge();
-            } catch (err) {
-                console.error(err);
-                const container = document.getElementById("tableContainer");
-                if (container) container.innerHTML = `<div class="empty-state"><p>⚠️ Error loading data: ${escapeHtml(err.message)}</p></div>`;
-                xyzRecords = [];
-                updateAvgBadge();
-            }
-        }
+    function escapeHtml(str) { return (str || '').replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
 
-        function renderTable() {
-            const container = document.getElementById("tableContainer");
-            if (!container) return;
-            if (xyzRecords.length === 0) {
-                container.innerHTML = '<div class="empty-state" style="padding:40px; text-align:center;">📭 No records found for XYZ substation. Submit peak load to see data.</div>';
-                return;
-            }
-            let html = `<table class="data-table"><thead><tr>
-                <th>Timestamp</th><th>Date</th><th>User ID</th>
-                <th>T1 (45 MVA) A</th><th>T2 (46 MVA) A</th><th>T3 (47 MVA) A</th>
-                <th>Avg Peak (A)</th>
-            </tr></thead><tbody>`;
-            
-            xyzRecords.forEach(rec => {
-                const displayVal = (val) => (val === 0 || val === "0") ? '<span class="zero-placeholder">—</span>' : val.toFixed(1);
-                html += `<tr>
-                    <td class="timestamp-cell">${escapeHtml(rec.timestamp || '—')}</td>
-                    <td>${escapeHtml(rec.date || '—')}</td>
-                    <td>${escapeHtml(rec.user || '—')}</td>
-                    <td class="numeric">${displayVal(rec.t1)}</td>
-                    <td class="numeric">${displayVal(rec.t2)}</td>
-                    <td class="numeric">${displayVal(rec.t3)}</td>
-                    <td class="numeric"><strong>${rec.avgPeak.toFixed(1)} A</strong></td>
-                </tr>`;
-            });
-            html += `</tbody><table>`;
-            container.innerHTML = html;
-        }
-
-        function updateAvgBadge() {
-            const badge = document.getElementById("avgAmpereBadge");
-            if (!badge) return;
-            if (xyzRecords.length === 0) {
-                badge.innerHTML = `⚡ Avg Peak A: N/A`;
-                return;
-            }
-            // Calculate average of all avgPeak values (overall substation average peak ampere)
-            const totalAvg = xyzRecords.reduce((sum, r) => sum + r.avgPeak, 0) / xyzRecords.length;
-            badge.innerHTML = `⚡ Avg Peak A: ${totalAvg.toFixed(1)} A (${xyzRecords.length} records)`;
-        }
-
-        // Check duplicate BEFORE submit: using latest xyzRecords
-        function isDuplicateDate(dateYMD) {
-            // date from input is YYYY-MM-DD; stored dates in sheet could be DD/MM/YYYY or YYYY/MM/DD
-            const targetObj = new Date(dateYMD);
-            const ddmm = `${String(targetObj.getDate()).padStart(2,'0')}/${String(targetObj.getMonth()+1).padStart(2,'0')}/${targetObj.getFullYear()}`;
-            const yyyymmdd = dateYMD.replace(/-/g, '/');
-            return xyzRecords.some(rec => rec.date === ddmm || rec.date === yyyymmdd);
-        }
-
-        // Submit with duplicate prevention
-        if (submitBtn) {
-            submitBtn.onclick = async () => {
-                const selectedDate = recordDateInput.value;
-                if (!selectedDate) { showStatus("Select a date", true); return; }
-                const hasAny = inputs.some(inp => inp && inp.value.trim() !== "");
-                if (!hasAny) { showStatus("Fill at least one Ampere value", true); return; }
-                
-                // Refresh data before duplicate check to ensure latest
-                await fetchXYZData();
-                if (isDuplicateDate(selectedDate)) {
-                    showStatus(`❌ Rejected: Data for ${selectedDate} already exists for XYZ substation. Duplicate not allowed.`, true);
-                    return;
-                }
-                
-                const operator = getOperatorId();
-                const dateSlash = selectedDate.replace(/-/g, "/");
-                const amps = inputs.map(inp => { let v = parseFloat(inp?.value); return (!isNaN(v) && v>=0) ? v : 0; });
-                const avgPreview = ((amps[0]+amps[1]+amps[2])/3).toFixed(1);
-                const confirmMsg = `📅 Date: ${selectedDate}\n👤 Operator: ${operator}\n\n🔹 T1: ${amps[0]} A\n🔹 T2: ${amps[1]} A\n🔹 T3: ${amps[2]} A\n📊 Avg: ${avgPreview} A\n\n✅ Confirm submission to Google Sheets?`;
-                if (!confirm(confirmMsg)) { showStatus("Cancelled", false); return; }
-                
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Submitting...';
-                
-                const form = document.createElement("form");
-                form.method = "POST";
-                form.action = FORM_URL;
-                form.target = "hidden_google_iframe";
-                form.style.display = "none";
-                const fields = [
-                    ["entry.3094480", "XYZ"],
-                    ["entry.1525214963", dateSlash],
-                    ["entry.538973069", operator],
-                    ["entry.1124170376", "45"],
-                    ["entry.120303341", "46"],
-                    ["entry.387659555", "47"],
-                    ["entry.1451736055", amps[0]],
-                    ["entry.31550722", amps[1]],
-                    ["entry.442388986", amps[2]]
-                ];
-                fields.forEach(([name,val]) => {
-                    let inp = document.createElement("input");
-                    inp.type = "hidden";
-                    inp.name = name;
-                    inp.value = val;
-                    form.appendChild(inp);
-                });
-                document.body.appendChild(form);
-                let finished = false;
-                const finalize = () => {
-                    if (finished) return;
-                    finished = true;
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Submit Peak Load';
-                    inputs.forEach(inp => { if(inp) inp.value = ""; });
-                    if (recordDateInput) recordDateInput.value = defaultDate;
-                    showStatus("✅ Submitted successfully! Data will appear after refresh.", false);
-                    if (form.parentNode) form.remove();
-                    setTimeout(() => fetchXYZData(), 1000);
-                };
-                const iframeEl = document.querySelector("iframe[name='hidden_google_iframe']");
-                if (iframeEl) iframeEl.onload = finalize;
-                setTimeout(finalize, 1500);
-                form.submit();
-            };
-        }
-
-        if (resetBtn) {
-            resetBtn.onclick = () => {
-                inputs.forEach(inp => { if(inp) inp.value = ""; });
-                if (recordDateInput) recordDateInput.value = defaultDate;
-                showStatus("Fields reset", false);
-            };
-        }
-
-        // Trend Analysis: line chart (chronological order of last 10 records)
-        function showTrendChart() {
-            if (xyzRecords.length === 0) {
-                showStatus("No data available for trend analysis", true);
-                return;
-            }
-            chartPanel.classList.remove("hidden-chart");
-            // chronological order (oldest to newest) for X axis
-            const chronological = [...xyzRecords].sort((a,b) => {
-                const da = new Date(a.date.split('/').reverse().join('-'));
-                const db = new Date(b.date.split('/').reverse().join('-'));
-                return da - db;
-            });
-            const last10 = chronological.slice(-10);
-            const labels = last10.map(r => r.date);
-            const t1Data = last10.map(r => r.t1);
-            const t2Data = last10.map(r => r.t2);
-            const t3Data = last10.map(r => r.t3);
-            
-            const ctx = document.getElementById("trendCanvas").getContext("2d");
-            if (chartInstance) chartInstance.destroy();
-            chartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        { label: 'T1 (45 MVA) Ampere', data: t1Data, borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.1)', tension: 0.2, fill: false, pointRadius: 4 },
-                        { label: 'T2 (46 MVA) Ampere', data: t2Data, borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', tension: 0.2, fill: false, pointRadius: 4 },
-                        { label: 'T3 (47 MVA) Ampere', data: t3Data, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.2, fill: false, pointRadius: 4 }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: { position: 'top' },
-                        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw} A` } }
-                    },
-                    scales: {
-                        y: { title: { display: true, text: 'Amperes (A)' } },
-                        x: { title: { display: true, text: 'Date' } }
-                    }
-                }
-            });
-        }
-
-        if (trendBtn) trendBtn.onclick = showTrendChart;
-        if (closeChartBtn) closeChartBtn.onclick = () => {
-            chartPanel.classList.add("hidden-chart");
-            if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
-        };
-        if (refreshBtn) refreshBtn.onclick = () => { fetchXYZData(); showStatus("Data refreshed", false); };
-        
-        // Initial load
-        fetchXYZData();
-        
-        // Enter key navigation (no spinners)
-        inputs.forEach((inp, idx) => {
-            if (inp) {
-                inp.addEventListener("keydown", (e) => {
-                    if (e.key === "Enter") {
-                        e.preventDefault();
-                        if (idx < inputs.length-1 && inputs[idx+1]) inputs[idx+1].focus();
-                        else submitBtn?.click();
-                    }
-                });
-            }
+    // detect column indices
+    let colIdx = { substation: -1, date: -1, t1A: -1, t2A: -1, t3A: -1, user: -1 };
+    function detectColumns(headers) {
+        colIdx = { substation: -1, date: -1, t1A: -1, t2A: -1, t3A: -1, user: -1 };
+        headers.forEach((h, idx) => {
+            const low = h.toLowerCase();
+            if(low.includes('substation') || low === 'substation') colIdx.substation = idx;
+            if(low === 'date' || low.includes('date')) colIdx.date = idx;
+            if(low.includes('t1') && low.includes('a')) colIdx.t1A = idx;
+            if(low.includes('t2') && low.includes('a')) colIdx.t2A = idx;
+            if(low.includes('t3') && low.includes('a')) colIdx.t3A = idx;
+            if(low.includes('operator') || low.includes('user id')) colIdx.user = idx;
         });
-        
-        // Logout handler
-        const logoutBtn = document.getElementById("logoutBtn");
-        if (logoutBtn) {
-            logoutBtn.onclick = (e) => {
-                e.preventDefault();
-                if (typeof window.logout === "function") window.logout();
-                else window.location.href = "index.html";
+        // fallback if detection fails (based on known ordering after form)
+        if(colIdx.substation === -1 && headers[0]) colIdx.substation = 0;
+        if(colIdx.date === -1 && headers[1]) colIdx.date = 1;
+        if(colIdx.t1A === -1 && headers[7]) colIdx.t1A = 7;
+        if(colIdx.t2A === -1 && headers[8]) colIdx.t2A = 8;
+        if(colIdx.t3A === -1 && headers[9]) colIdx.t3A = 9;
+    }
+
+    // filter only XYZ, sort descending by date (yyyy/mm/dd or yyyy-mm-dd)
+    function filterAndSortXyzData(rows) {
+        const xyzRows = rows.filter(row => {
+            const substationVal = (colIdx.substation !== -1 && row[colIdx.substation]) ? row[colIdx.substation].toString().trim() : "";
+            return substationVal === "XYZ";
+        });
+        // sort descending by date (latest first)
+        xyzRows.sort((a,b) => {
+            const dateA = (colIdx.date !== -1 ? a[colIdx.date] : "");
+            const dateB = (colIdx.date !== -1 ? b[colIdx.date] : "");
+            const parseDate = (dStr) => {
+                if(!dStr) return new Date(0);
+                let clean = dStr.replace(/\//g, '-');
+                return new Date(clean);
             };
+            return parseDate(dateB) - parseDate(dateA);
+        });
+        return xyzRows;
+    }
+
+    // compute peak & avg ampere from filtered data (all transformer ampere values)
+    function computeStats(xyzData) {
+        let allAmps = [];
+        xyzData.forEach(row => {
+            const t1 = colIdx.t1A !== -1 ? parseFloat(row[colIdx.t1A]) : NaN;
+            const t2 = colIdx.t2A !== -1 ? parseFloat(row[colIdx.t2A]) : NaN;
+            const t3 = colIdx.t3A !== -1 ? parseFloat(row[colIdx.t3A]) : NaN;
+            if(!isNaN(t1) && t1>=0) allAmps.push(t1);
+            if(!isNaN(t2) && t2>=0) allAmps.push(t2);
+            if(!isNaN(t3) && t3>=0) allAmps.push(t3);
+        });
+        const peak = allAmps.length ? Math.max(...allAmps) : 0;
+        const avg = allAmps.length ? (allAmps.reduce((s,v)=>s+v,0) / allAmps.length).toFixed(1) : 0;
+        return { peak, avg: parseFloat(avg) };
+    }
+
+    // render table: replace 0 with "—" in ampere columns, show only xyz data
+    function renderTable(data) {
+        const container = document.getElementById('tableContainer');
+        const recSpan = document.getElementById('recordCount');
+        if(!container) return;
+        if(!data.length) {
+            container.innerHTML = '<div class="empty-state"><h3>📭 No XYZ records found</h3><p>Submit peak load to see data.</p></div>';
+            document.getElementById('statSummary').innerHTML = `<span class="stat-badge"><i class="fas fa-chart-line"></i> Peak: -- A</span>
+                                                               <span class="stat-badge"><i class="fas fa-waveform"></i> Avg: -- A</span>`;
+            return;
         }
-    })();
+        // update stats
+        const { peak, avg } = computeStats(data);
+        const statDiv = document.getElementById('statSummary');
+        if(statDiv) statDiv.innerHTML = `<span class="stat-badge"><i class="fas fa-chart-line"></i> Peak: ${peak.toFixed(1)} A</span>
+                                         <span class="stat-badge"><i class="fas fa-waveform"></i> Avg: ${avg.toFixed(1)} A</span>`;
+        
+        let html = '<table class="data-table"><thead><tr>';
+        csvHeaders.forEach(h => html += `<th>${escapeHtml(h)}</th>`);
+        html += '</tr></thead><tbody>';
+        data.forEach(row => {
+            html += '<tr>';
+            row.forEach((cell, idx) => {
+                let displayVal = cell === undefined || cell === '' ? '—' : cell;
+                const headerName = csvHeaders[idx] || '';
+                // if ampere column and numeric zero replace with —
+                if(headerName.match(/\(A\)|Amps|A$/i) && parseFloat(cell) === 0 && cell !== '—') displayVal = '—';
+                // numeric class for ampere/mva columns
+                let cls = '';
+                if(headerName.match(/A$|MVA/i)) cls = 'numeric';
+                if(headerName.toLowerCase().includes('timestamp')) cls = 'timestamp-cell';
+                html += `<td class="${cls}">${escapeHtml(displayVal)}</td>`;
+            });
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    // load CSV, process only XYZ data
+    async function loadDashboardData() {
+        const container = document.getElementById('tableContainer');
+        if(container) container.innerHTML = '<div class="loading-state"><div class="spinner" style="width:40px;height:40px;border:3px solid #e2e8f0; border-top-color:#3b82f6; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 15px;"></div><p>Fetching records...</p></div>';
+        try {
+            const resp = await fetch(CSV_URL, { cache: 'no-store' });
+            if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const text = await resp.text();
+            const lines = text.trim().split(/\r?\n/);
+            if(lines.length < 2) throw new Error("No data rows");
+            csvHeaders = parseCSVRow(lines[0]);
+            detectColumns(csvHeaders);
+            const rawRows = lines.slice(1).filter(l => l.trim()).map(parseCSVRow);
+            allRawData = rawRows;
+            xyzFilteredSorted = filterAndSortXyzData(rawRows);
+            renderTable(xyzFilteredSorted);
+        } catch(err) {
+            if(container) container.innerHTML = `<div class="empty-state"><h3>⚠️ Load error</h3><p>${escapeHtml(err.message)}</p><button class="refresh-btn" style="margin-top:12px;" onclick="window.refreshDashboardFn?.()">Retry</button></div>`;
+        }
+    }
+
+    // duplicate check: given date (YYYY-MM-DD), transform to YYYY/MM/DD and compare with existing XYZ records
+    async function isDuplicateDateForXYZ(dateYmd) {
+        // convert to slashed format "YYYY/MM/DD"
+        const targetDate = dateYmd.replace(/-/g, '/');
+        // fetch fresh CSV for accuracy
+        try {
+            const resp = await fetch(CSV_URL, { cache: 'no-store' });
+            if(!resp.ok) return false;
+            const text = await resp.text();
+            const lines = text.trim().split(/\r?\n/);
+            if(lines.length < 2) return false;
+            const headers = parseCSVRow(lines[0]);
+            detectColumns(headers);
+            const rows = lines.slice(1).filter(l => l.trim()).map(parseCSVRow);
+            const xyzRecords = rows.filter(row => {
+                const sub = (colIdx.substation !== -1 && row[colIdx.substation]) ? row[colIdx.substation].toString().trim() : "";
+                return sub === "XYZ";
+            });
+            return xyzRecords.some(row => {
+                const recordDateRaw = (colIdx.date !== -1 && row[colIdx.date]) ? row[colIdx.date].toString().trim() : "";
+                return recordDateRaw === targetDate;
+            });
+        } catch(e) {
+            console.warn("duplicate check error", e);
+            return false;
+        }
+    }
+
+    // Form submission with duplicate detection + zero handling
+    const t1 = document.getElementById("t1_amps");
+    const t2 = document.getElementById("t2_amps");
+    const t3 = document.getElementById("t3_amps");
+    const submitBtn = document.getElementById("submitBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const statusMsg = document.getElementById("statusMsg");
+    const recordDate = document.getElementById("recordDate");
+    const userIdSpan = document.getElementById("userIdDisplay");
+    const inputs = [t1, t2, t3];
+    const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScG9F5CDmCm8k6CIckSfJMxzIUQI8io0942FhyO-6B4lJT7EQ/formResponse";
+
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    const defaultInputDate = `${yyyy}-${mm}-${dd}`;
+    if(recordDate) recordDate.value = defaultInputDate;
+
+    const showStatus = (msg, isError = false) => {
+        if(!statusMsg) return;
+        statusMsg.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`;
+        statusMsg.className = `status ${isError ? "error" : "success"}`;
+        if(!isError) setTimeout(() => { if(statusMsg) { statusMsg.innerHTML = `<i class="fas fa-info-circle"></i> Fill at least one transformer's Ampere value.`; statusMsg.className = "status"; } }, 3500);
+    };
+
+    const getDateSlashed = () => recordDate && recordDate.value ? recordDate.value.replace(/-/g, "/") : defaultInputDate.replace(/-/g, "/");
+    const getAmp = (el) => { let v = parseFloat(el?.value); return (!isNaN(v) && v >= 0) ? v : 0; };
+    const hasInput = () => inputs.some(inp => inp && inp.value.trim() !== "");
+    const getOperatorId = () => {
+        if(userIdSpan && userIdSpan.textContent && userIdSpan.textContent !== "LOADING...") return userIdSpan.textContent.trim();
+        const stored = localStorage.getItem("authenticatedUserId");
+        return stored || "NEA_OPERATOR";
+    };
+    const clearFields = () => { inputs.forEach(inp => { if(inp) inp.value = ""; }); if(recordDate) recordDate.value = defaultInputDate; };
+
+    if (submitBtn) {
+        submitBtn.onclick = async () => {
+            if (!hasInput()) { showStatus("Please fill at least one Amp value.", true); return; }
+            const selectedDateRaw = recordDate.value;
+            if(!selectedDateRaw) { showStatus("Select date.", true); return; }
+            // duplicate check
+            const duplicateExists = await isDuplicateDateForXYZ(selectedDateRaw);
+            if(duplicateExists) {
+                showStatus(`❌ Data already exists for ${selectedDateRaw.replace(/-/g, '/')} (XYZ substation). Duplicate not allowed.`, true);
+                return;
+            }
+            const dateSlash = getDateSlashed();
+            const operatorId = getOperatorId();
+            const amps = inputs.map(inp => getAmp(inp));
+            const summary = `⚡ CONFIRM SUBMISSION ⚡\n📍 Substation: XYZ\n📅 Date: ${dateSlash}\n👤 User: ${operatorId}\n\n🔹 T1: ${amps[0]} A\n🔹 T2: ${amps[1]} A\n🔹 T3: ${amps[2]} A\n\n✅ Submit to Google Sheets?`;
+            if (!confirm(summary)) { showStatus("Cancelled.", false); return; }
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Submitting...';
+            
+            const form = document.createElement("form");
+            form.method = "POST";
+            form.action = FORM_URL;
+            form.target = "hidden_google_iframe";
+            form.style.display = "none";
+            const fields = [
+                ["entry.3094480", "XYZ"],
+                ["entry.1525214963", dateSlash],
+                ["entry.538973069", operatorId],
+                ["entry.1124170376", "45"],
+                ["entry.120303341", "46"],
+                ["entry.387659555", "47"],
+                ["entry.1451736055", amps[0]],
+                ["entry.31550722", amps[1]],
+                ["entry.442388986", amps[2]]
+            ];
+            for (let [name, val] of fields) { let inp = document.createElement("input"); inp.type = "hidden"; inp.name = name; inp.value = val; form.appendChild(inp); }
+            document.body.appendChild(form);
+            let submitted = false;
+            const finalize = () => {
+                if(submitted) return;
+                submitted = true;
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Submit Peak Load';
+                clearFields();
+                showStatus("✅ Submitted! Data synced. Dashboard updated.", false);
+                if(form.parentNode) form.remove();
+                if(window.refreshDashboardFn) setTimeout(window.refreshDashboardFn, 900);
+            };
+            const iframeEl = document.querySelector("iframe[name='hidden_google_iframe']");
+            if(iframeEl) iframeEl.onload = finalize;
+            setTimeout(finalize, 1500);
+            form.submit();
+        };
+    }
+    if(resetBtn) resetBtn.onclick = () => { clearFields(); showStatus("Fields reset."); };
+    
+    // remove spin buttons style already applied
+    // Dashboard refresh & chart modal
+    const refreshBtnDash = document.getElementById('refreshBtn');
+    if(refreshBtnDash) refreshBtnDash.addEventListener('click', () => loadDashboardData());
+    window.refreshDashboardFn = loadDashboardData;
+
+    // Logout
+    const logoutBtnEl = document.getElementById("logoutBtn");
+    if(logoutBtnEl) logoutBtnEl.onclick = (e) => { e.preventDefault(); if(typeof window.logout === "function") window.logout(); else window.location.href = "index.html"; };
+
+    // Trend Analysis modal with line chart
+    let chartInstance = null;
+    const modal = document.getElementById('chartModal');
+    const trendBtn = document.getElementById('trendChartBtn');
+    const closeModal = document.getElementById('closeModalBtn');
+    function openTrendChart() {
+        if(!xyzFilteredSorted.length) {
+            alert("No XYZ data available to display trend.");
+            return;
+        }
+        // prepare sorted ascending for x-axis (Date ascending)
+        const sortedAsc = [...xyzFilteredSorted].sort((a,b) => {
+            const dateA = colIdx.date !== -1 ? a[colIdx.date] : "";
+            const dateB = colIdx.date !== -1 ? b[colIdx.date] : "";
+            const parseD = d => new Date(d.replace(/\//g, '-'));
+            return parseD(dateA) - parseD(dateB);
+        });
+        const dates = [];
+        const t1data = [], t2data = [], t3data = [];
+        sortedAsc.forEach(row => {
+            const dateVal = (colIdx.date !== -1 && row[colIdx.date]) ? row[colIdx.date] : "";
+            dates.push(dateVal);
+            const t1v = colIdx.t1A !== -1 ? parseFloat(row[colIdx.t1A]) : 0;
+            const t2v = colIdx.t2A !== -1 ? parseFloat(row[colIdx.t2A]) : 0;
+            const t3v = colIdx.t3A !== -1 ? parseFloat(row[colIdx.t3A]) : 0;
+            t1data.push(isNaN(t1v) ? 0 : t1v);
+            t2data.push(isNaN(t2v) ? 0 : t2v);
+            t3data.push(isNaN(t3v) ? 0 : t3v);
+        });
+        const canvas = document.getElementById('trendCanvas');
+        if(chartInstance) chartInstance.destroy();
+        const ctx = canvas.getContext('2d');
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [
+                    { label: 'T1 Ampere (A)', data: t1data, borderColor: '#dc2626', backgroundColor: 'transparent', tension: 0.2, fill: false, pointRadius: 3 },
+                    { label: 'T2 Ampere (A)', data: t2data, borderColor: '#f59e0b', backgroundColor: 'transparent', tension: 0.2, fill: false, pointRadius: 3 },
+                    { label: 'T3 Ampere (A)', data: t3data, borderColor: '#10b981', backgroundColor: 'transparent', tension: 0.2, fill: false, pointRadius: 3 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: true, plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw} A` } } } }
+        });
+        modal.classList.add('active');
+    }
+    if(trendBtn) trendBtn.addEventListener('click', openTrendChart);
+    if(closeModal) closeModal.addEventListener('click', () => modal.classList.remove('active'));
+    modal.addEventListener('click', (e) => { if(e.target === modal) modal.classList.remove('active'); });
+    
+    loadDashboardData();
+    const styleSpin = document.createElement('style');
+    styleSpin.textContent = `@keyframes spin { to { transform: rotate(360deg); } } .spinner { animation: spin 0.8s linear infinite; }`;
+    document.head.appendChild(styleSpin);
 </script>
 </body>
 </html>
