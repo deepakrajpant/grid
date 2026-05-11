@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-  <title>NEA Smart Grid Access | Login</title>
+  <title>NEA Smart Grid | Secure Login</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -15,32 +15,61 @@
 
     body {
       font-family: 'Inter', sans-serif;
-      background: linear-gradient(145deg, #e0eef7 0%, #cfe2ed 100%);
+      background: radial-gradient(circle at 10% 30%, #e0eef7, #c8dce8);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 1rem;
+      padding: 1.5rem;
+      position: relative;
     }
 
-    /* main container - card style */
+    /* animated background accents */
+    body::before {
+      content: '';
+      position: absolute;
+      top: -20%;
+      left: -10%;
+      width: 400px;
+      height: 400px;
+      background: rgba(0, 102, 51, 0.1);
+      border-radius: 50%;
+      filter: blur(80px);
+      z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: absolute;
+      bottom: -20%;
+      right: -10%;
+      width: 500px;
+      height: 500px;
+      background: rgba(255, 140, 0, 0.08);
+      border-radius: 50%;
+      filter: blur(100px);
+      z-index: 0;
+    }
+
     .login-wrapper {
-      max-width: 1200px;
+      max-width: 1300px;
       width: 100%;
-      background: rgba(255, 255, 255, 0.98);
-      border-radius: 2rem;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(2px);
+      border-radius: 2.5rem;
+      box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255,255,255,0.5);
       overflow: hidden;
       display: flex;
       flex-wrap: wrap;
-      transition: all 0.2s;
+      transition: all 0.3s ease;
+      z-index: 2;
     }
 
-    /* left illustration panel - green gradient (NEA style) */
+    /* LEFT PANEL – improved for large screens */
     .hero-panel {
       flex: 1.2;
-      background: linear-gradient(135deg, #006633 0%, #008847 100%);
-      padding: 2rem 1.8rem;
+      background: linear-gradient(135deg, #006633 0%, #008f47 100%);
+      padding: 2.5rem 2rem;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -49,84 +78,74 @@
       overflow: hidden;
     }
 
-    .hero-panel::before {
-      content: "";
+    .hero-panel .bg-pattern {
       position: absolute;
-      top: -30%;
-      right: -20%;
-      width: 280px;
-      height: 280px;
-      background: rgba(255,255,255,0.08);
-      border-radius: 50%;
-      pointer-events: none;
-    }
-
-    .hero-panel::after {
-      content: "";
-      position: absolute;
-      bottom: -20%;
-      left: -10%;
-      width: 240px;
-      height: 240px;
-      background: rgba(255,140,0,0.15);
-      border-radius: 50%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: radial-gradient(circle at 20% 40%, rgba(255,255,255,0.1) 2%, transparent 2.5%);
+      background-size: 30px 30px;
       pointer-events: none;
     }
 
     .hero-icon {
-      font-size: 3.8rem;
-      margin-bottom: 1.5rem;
-      color: #FFD966;
+      font-size: 4rem;
+      margin-bottom: 1.2rem;
+      color: #FFE6A3;
+      display: inline-block;
     }
 
     .hero-panel h2 {
-      font-size: 2rem;
-      font-weight: 700;
-      letter-spacing: -0.3px;
-      margin-bottom: 1rem;
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.8rem;
       line-height: 1.2;
     }
 
     .hero-panel p {
       font-size: 0.95rem;
-      opacity: 0.9;
+      opacity: 0.92;
       margin-bottom: 2rem;
       line-height: 1.5;
+      max-width: 90%;
     }
 
     .feature-grid {
       display: flex;
-      gap: 1.2rem;
+      gap: 1rem;
       flex-wrap: wrap;
-      margin-top: 1rem;
+      margin-top: 0.5rem;
     }
 
     .feature-card {
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.14);
       backdrop-filter: blur(4px);
       padding: 0.9rem 1rem;
       border-radius: 1.5rem;
       min-width: 130px;
       text-align: center;
       border: 1px solid rgba(255,255,255,0.25);
+      transition: transform 0.2s;
     }
 
     .feature-card i {
-      font-size: 1.6rem;
-      margin-bottom: 0.4rem;
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
       display: block;
-      color: #FFC107;
+      color: #FFD966;
     }
 
     .feature-card span {
-      font-weight: 500;
+      font-weight: 600;
       font-size: 0.8rem;
     }
 
-    /* right form panel */
+    /* RIGHT FORM PANEL – refined spacing */
     .form-panel {
       flex: 1;
-      padding: 2.2rem 2rem;
+      padding: 2.5rem 2.2rem;
       background: white;
       position: relative;
     }
@@ -134,63 +153,62 @@
     .logo-area {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 1.8rem;
+      gap: 12px;
+      margin-bottom: 2rem;
       justify-content: center;
     }
 
     .logo-badge {
       background: #006633;
-      width: 48px;
-      height: 48px;
+      width: 52px;
+      height: 52px;
       border-radius: 60px;
       display: flex;
       align-items: center;
       justify-content: center;
       color: white;
-      font-size: 1.5rem;
-      box-shadow: 0 6px 12px rgba(0,102,51,0.2);
+      font-size: 1.6rem;
+      box-shadow: 0 10px 18px rgba(0,102,51,0.2);
     }
 
     .logo-text {
-      font-weight: 700;
-      font-size: 1.3rem;
-      color: #1e293b;
-      letter-spacing: -0.2px;
+      font-weight: 800;
+      font-size: 1.5rem;
+      color: #0f172a;
+      letter-spacing: -0.3px;
     }
 
     .logo-text span {
       color: #006633;
-      font-weight: 800;
     }
 
     .form-header {
       text-align: center;
-      margin-bottom: 1.8rem;
+      margin-bottom: 2rem;
     }
 
     .form-header h1 {
-      font-size: 1.8rem;
+      font-size: 1.9rem;
       font-weight: 700;
       color: #0f172a;
     }
 
     .form-header p {
-      color: #4b5563;
-      font-size: 0.85rem;
+      color: #475569;
+      font-size: 0.9rem;
       margin-top: 6px;
     }
 
     .input-group {
-      margin-bottom: 1.4rem;
+      margin-bottom: 1.5rem;
     }
 
     .input-group label {
       display: block;
       font-weight: 600;
       font-size: 0.85rem;
-      color: #1f2a3e;
-      margin-bottom: 6px;
+      color: #1e293b;
+      margin-bottom: 8px;
     }
 
     .input-icon-wrapper {
@@ -201,35 +219,34 @@
 
     .input-icon-wrapper i:first-child {
       position: absolute;
-      left: 16px;
+      left: 18px;
       color: #006633;
-      font-size: 1rem;
+      font-size: 1.1rem;
       z-index: 2;
       pointer-events: none;
     }
 
     .input-icon-wrapper input {
       width: 100%;
-      padding: 0.9rem 3rem 0.9rem 2.8rem;
+      padding: 0.95rem 3rem 0.95rem 3rem;
       border: 1.5px solid #e2edf4;
       border-radius: 60px;
       font-size: 1rem;
       font-family: 'Inter', sans-serif;
       transition: all 0.2s;
-      background: #fefefe;
+      background: #ffffff;
       outline: none;
       -webkit-appearance: none;
     }
 
-    /* improve touch target for mobile */
     .input-icon-wrapper input:focus {
       border-color: #FF8C00;
-      box-shadow: 0 0 0 3px rgba(255, 140, 0, 0.15);
+      box-shadow: 0 0 0 4px rgba(255, 140, 0, 0.12);
     }
 
     .password-toggle {
       position: absolute;
-      right: 14px;
+      right: 18px;
       background: none;
       border: none;
       cursor: pointer;
@@ -247,18 +264,7 @@
       color: #006633;
     }
 
-    /* larger hit area on mobile */
-    @media (max-width: 640px) {
-      .password-toggle {
-        padding: 14px 10px;
-        right: 10px;
-      }
-      .input-icon-wrapper input {
-        padding: 0.9rem 3.2rem 0.9rem 2.8rem;
-        font-size: 16px; /* prevents zoom on iOS */
-      }
-    }
-
+    /* button */
     .btn-login {
       background: linear-gradient(95deg, #006633, #008f47);
       width: 100%;
@@ -271,15 +277,21 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: 12px;
       cursor: pointer;
-      transition: 0.2s;
+      transition: all 0.25s;
       margin: 0.8rem 0 1rem;
-      box-shadow: 0 6px 14px rgba(0,102,51,0.25);
+      box-shadow: 0 8px 20px rgba(0,102,51,0.3);
+    }
+
+    .btn-login:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.02);
+      box-shadow: 0 12px 24px rgba(0,102,51,0.35);
     }
 
     .btn-login:active {
-      transform: scale(0.97);
+      transform: scale(0.98);
     }
 
     .forgot-link {
@@ -300,7 +312,7 @@
 
     .footer-note {
       text-align: center;
-      margin-top: 2rem;
+      margin-top: 2.2rem;
       font-size: 0.7rem;
       color: #6c757d;
       border-top: 1px solid #eef2f5;
@@ -313,12 +325,14 @@
       font-weight: 600;
     }
 
+    /* status messages */
     .msg-alert {
-      padding: 0.8rem;
+      padding: 0.8rem 1rem;
       border-radius: 60px;
       font-size: 0.8rem;
       text-align: center;
       margin-bottom: 1.2rem;
+      font-weight: 500;
     }
 
     .msg-error {
@@ -333,14 +347,14 @@
       border-left: 4px solid #006633;
     }
 
-    /* loading overlay */
+    /* loading spinner */
     .loading-overlay {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.94);
       backdrop-filter: blur(4px);
       display: flex;
       align-items: center;
@@ -358,8 +372,8 @@
     }
 
     .spinner {
-      width: 44px;
-      height: 44px;
+      width: 48px;
+      height: 48px;
       border: 4px solid #e2edf4;
       border-top: 4px solid #006633;
       border-radius: 50%;
@@ -370,72 +384,99 @@
       to { transform: rotate(360deg); }
     }
 
-    /* responsive design - mobile first optimizations */
-    @media (max-width: 800px) {
-      body {
-        padding: 0.75rem;
+    /* ===== RESPONSIVE DESIGN (PC + MOBILE) ===== */
+    @media (min-width: 1200px) {
+      .login-wrapper {
+        max-width: 1300px;
       }
+      .hero-panel {
+        padding: 3rem;
+      }
+      .form-panel {
+        padding: 3rem 2.5rem;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .hero-panel {
+        flex: 1;
+      }
+      .hero-panel p {
+        max-width: 100%;
+      }
+      .feature-card {
+        min-width: 110px;
+      }
+    }
+
+    @media (max-width: 780px) {
       .hero-panel {
         display: none;
       }
-      .form-panel {
-        flex: 1;
-        padding: 1.8rem 1.5rem;
-      }
       .login-wrapper {
-        max-width: 500px;
+        max-width: 520px;
         margin: 0 auto;
-        border-radius: 1.8rem;
+        border-radius: 2rem;
+      }
+      .form-panel {
+        padding: 2rem 1.8rem;
       }
       .logo-text {
-        font-size: 1.2rem;
+        font-size: 1.3rem;
       }
       .form-header h1 {
-        font-size: 1.5rem;
-      }
-      .btn-login {
-        padding: 0.9rem;
+        font-size: 1.6rem;
       }
     }
 
     @media (max-width: 480px) {
+      body {
+        padding: 0.8rem;
+      }
       .form-panel {
-        padding: 1.5rem 1.2rem;
+        padding: 1.6rem 1.2rem;
       }
       .input-icon-wrapper input {
-        padding: 0.85rem 3rem 0.85rem 2.6rem;
+        padding: 0.85rem 2.8rem 0.85rem 2.8rem;
+        font-size: 16px;
+      }
+      .password-toggle {
+        right: 12px;
+        padding: 10px 8px;
+      }
+      .btn-login {
+        padding: 0.85rem;
+        font-size: 0.95rem;
       }
       .logo-badge {
-        width: 42px;
-        height: 42px;
-        font-size: 1.3rem;
-      }
-      .logo-text {
-        font-size: 1.1rem;
+        width: 44px;
+        height: 44px;
+        font-size: 1.4rem;
       }
       .form-header h1 {
         font-size: 1.4rem;
       }
-      .btn-login {
-        font-size: 0.9rem;
-      }
     }
 
     /* extra small */
-    @media (max-width: 380px) {
+    @media (max-width: 360px) {
       .form-panel {
         padding: 1.2rem 1rem;
       }
+      .input-icon-wrapper i:first-child {
+        left: 14px;
+      }
       .input-icon-wrapper input {
-        padding: 0.8rem 2.8rem 0.8rem 2.4rem;
+        padding: 0.8rem 2.5rem 0.8rem 2.5rem;
       }
     }
   </style>
 </head>
 <body>
 <div class="login-wrapper">
-  <!-- Left panel: NEA themed illustration (hidden on mobile) -->
+  <!-- Left panel: NEA illustration (hidden on tablet/mobile) -->
   <div class="hero-panel">
+    <div class="bg-pattern"></div>
     <div class="hero-icon">
       <i class="fas fa-bolt"></i>
     </div>
@@ -485,7 +526,7 @@
       <label><i class="fas fa-lock"></i> Password</label>
       <div class="input-icon-wrapper">
         <i class="fas fa-lock"></i>
-        <input type="password" id="password" placeholder="password" autocomplete="current-password">
+        <input type="password" id="password" placeholder="··········" autocomplete="current-password">
         <button class="password-toggle" id="togglePassword" type="button" aria-label="Show/Hide Password">
           <i class="fas fa-eye"></i>
         </button>
@@ -551,12 +592,11 @@
     }, 5000);
   }
 
-  // Password visibility toggle (improved icon management)
+  // Password visibility toggle (fixed)
   if (togglePassword && passwordField) {
     togglePassword.addEventListener('click', () => {
       const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
       passwordField.setAttribute('type', type);
-      // change icon inside the button
       const icon = togglePassword.querySelector('i');
       if (icon) {
         if (type === 'password') {
@@ -621,7 +661,7 @@
       })
       .catch((error) => {
         hideLoading();
-        showMsg(SORRY);
+        showMsg(error.message);
       });
   };
 
