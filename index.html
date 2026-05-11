@@ -2,27 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Grid Management System </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>NEA Smart Grid Access | Login</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --primary: #4361ee;
-      --primary-dark: #3a56d4;
-      --secondary: #7209b7;
-      --accent: #f72585;
-      --light: #f8f9fa;
-      --dark: #212529;
-      --success: #4cc9f0;
-      --error: #f94144;
-      --gray: #6c757d;
-      --light-gray: #e9ecef;
-      --border-radius: 12px;
-      --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-      --transition: all 0.3s ease;
-    }
-
     * {
       margin: 0;
       padding: 0;
@@ -30,575 +14,572 @@
     }
 
     body {
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(145deg, #e0eef7 0%, #cfe2ed 100%);
       min-height: 100vh;
       display: flex;
-      justify-content: center;
       align-items: center;
-      padding: 20px;
-      color: var(--dark);
+      justify-content: center;
+      padding: 1.5rem;
     }
 
-    .container {
-      display: flex;
-      max-width: 900px;
+    /* main container - card style like dashboard */
+    .login-wrapper {
+      max-width: 1200px;
       width: 100%;
-      background: white;
-      border-radius: var(--border-radius);
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 2rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
       overflow: hidden;
-      box-shadow: var(--box-shadow);
-      animation: fadeIn 0.5s ease;
+      display: flex;
+      flex-wrap: wrap;
+      transition: all 0.2s;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .illustration {
-      flex: 1;
-      background: linear-gradient(135deg, #4361ee 0%, #7209b7 100%);
+    /* left illustration panel - green gradient (NEA style) */
+    .hero-panel {
+      flex: 1.2;
+      background: linear-gradient(135deg, #006633 0%, #008847 100%);
+      padding: 2rem 1.8rem;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      align-items: center;
-      padding: 40px;
       color: white;
-      text-align: center;
-      display: none;
-    }
-
-    .illustration img {
-      width: 100%;
-      max-width: 300px;
-      margin-bottom: 20px;
-    }
-
-    .illustration h2 {
-      font-size: 28px;
-      margin-bottom: 15px;
-    }
-
-    .illustration p {
-      font-size: 16px;
-      opacity: 0.9;
-    }
-
-    .auth-container {
-      flex: 1;
-      padding: 50px 40px;
       position: relative;
+      overflow: hidden;
     }
 
-    .logo {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 30px;
-    }
-
-    .logo-icon {
-      background: var(--primary);
-      width: 50px;
-      height: 50px;
+    .hero-panel::before {
+      content: "";
+      position: absolute;
+      top: -30%;
+      right: -20%;
+      width: 280px;
+      height: 280px;
+      background: rgba(255,255,255,0.08);
       border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .hero-panel::after {
+      content: "";
+      position: absolute;
+      bottom: -20%;
+      left: -10%;
+      width: 240px;
+      height: 240px;
+      background: rgba(255,140,0,0.15);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .hero-icon {
+      font-size: 3.8rem;
+      margin-bottom: 1.5rem;
+      color: #FFD966;
+    }
+
+    .hero-panel h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    .hero-panel p {
+      font-size: 0.95rem;
+      opacity: 0.9;
+      margin-bottom: 2rem;
+      line-height: 1.5;
+    }
+
+    .feature-grid {
+      display: flex;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+
+    .feature-card {
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(4px);
+      padding: 0.9rem 1rem;
+      border-radius: 1.5rem;
+      min-width: 130px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.25);
+    }
+
+    .feature-card i {
+      font-size: 1.6rem;
+      margin-bottom: 0.4rem;
+      display: block;
+      color: #FFC107;
+    }
+
+    .feature-card span {
+      font-weight: 500;
+      font-size: 0.8rem;
+    }
+
+    /* right form panel */
+    .form-panel {
+      flex: 1;
+      padding: 2.2rem 2rem;
+      background: white;
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 1.8rem;
+      justify-content: center;
+    }
+
+    .logo-badge {
+      background: #006633;
+      width: 48px;
+      height: 48px;
+      border-radius: 60px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-right: 12px;
       color: white;
-      font-size: 24px;
+      font-size: 1.5rem;
+      box-shadow: 0 6px 12px rgba(0,102,51,0.2);
     }
 
     .logo-text {
-      font-size: 24px;
       font-weight: 700;
-      color: var(--primary);
+      font-size: 1.3rem;
+      color: #1e293b;
+      letter-spacing: -0.2px;
+    }
+
+    .logo-text span {
+      color: #006633;
+      font-weight: 800;
     }
 
     .form-header {
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 1.8rem;
     }
 
     .form-header h1 {
-      font-size: 28px;
-      color: var(--dark);
-      margin-bottom: 8px;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #0f172a;
     }
 
     .form-header p {
-      color: var(--gray);
-      font-size: 16px;
+      color: #4b5563;
+      font-size: 0.85rem;
+      margin-top: 6px;
     }
 
-    .form-group {
-      margin-bottom: 20px;
-      position: relative;
+    .input-group {
+      margin-bottom: 1.3rem;
     }
 
-    .form-group label {
+    .input-group label {
       display: block;
-      margin-bottom: 8px;
-      font-weight: 500;
-      color: var(--dark);
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: #1f2a3e;
+      margin-bottom: 6px;
     }
 
-    .input-with-icon {
+    .input-icon-wrapper {
       position: relative;
+      display: flex;
+      align-items: center;
     }
 
-    .input-icon {
+    .input-icon-wrapper i:first-child {
       position: absolute;
-      left: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--gray);
+      left: 14px;
+      color: #006633;
+      font-size: 1rem;
     }
 
-    .form-control {
+    .input-icon-wrapper input {
       width: 100%;
-      padding: 14px 20px 14px 45px;
-      border: 2px solid var(--light-gray);
-      border-radius: var(--border-radius);
-      font-size: 16px;
-      transition: var(--transition);
+      padding: 0.9rem 1rem 0.9rem 2.6rem;
+      border: 1.5px solid #e2edf4;
+      border-radius: 60px;
+      font-size: 0.9rem;
+      font-family: 'Inter', monospace;
+      transition: all 0.2s;
+      background: #fefefe;
       outline: none;
     }
 
-    .form-control:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+    .input-icon-wrapper input:focus {
+      border-color: #FF8C00;
+      box-shadow: 0 0 0 3px rgba(255, 140, 0, 0.15);
     }
 
     .password-toggle {
       position: absolute;
-      right: 15px;
-      top: 50%;
-      transform: translateY(-50%);
+      right: 12px;
       background: none;
       border: none;
-      color: var(--gray);
       cursor: pointer;
+      color: #94a3b8;
+      font-size: 1rem;
+      padding: 0 8px;
     }
 
-    .btn {
-      display: block;
+    .btn-login {
+      background: linear-gradient(95deg, #006633, #008f47);
       width: 100%;
-      padding: 14px;
+      padding: 0.9rem;
       border: none;
-      border-radius: var(--border-radius);
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: var(--transition);
-      text-align: center;
-    }
-
-    .btn-primary {
-      background: var(--primary);
+      border-radius: 60px;
+      font-weight: 700;
+      font-size: 0.95rem;
       color: white;
-      margin-top: 10px;
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-dark);
-      transform: translateY(-2px);
-    }
-
-    .btn-secondary {
-      background: var(--secondary);
-      color: white;
-      margin-top: 10px;
-    }
-
-    .btn-secondary:hover {
-      opacity: 0.9;
-      transform: translateY(-2px);
-    }
-
-    .btn-link {
-      background: none;
-      color: var(--primary);
-      text-decoration: underline;
-      font-weight: 500;
-      padding: 10px 0;
-    }
-
-    .btn-link:hover {
-      color: var(--primary-dark);
-    }
-
-    .divider {
-      display: flex;
-      align-items: center;
-      margin: 20px 0;
-    }
-
-    .divider-line {
-      flex: 1;
-      height: 1px;
-      background: var(--light-gray);
-    }
-
-    .divider-text {
-      padding: 0 15px;
-      color: var(--gray);
-      font-size: 14px;
-    }
-
-    #msg {
-      padding: 12px;
-      border-radius: var(--border-radius);
-      margin: 15px 0;
-      text-align: center;
-      font-weight: 500;
-    }
-
-    .msg-error {
-      background: rgba(249, 65, 68, 0.1);
-      color: var(--error);
-      border: 1px solid rgba(249, 65, 68, 0.2);
-    }
-
-    .msg-success {
-      background: rgba(76, 201, 240, 0.1);
-      color: var(--success);
-      border: 1px solid rgba(76, 201, 240, 0.2);
-    }
-
-    .loading {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(255, 255, 255, 0.8);
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: var(--border-radius);
-      z-index: 10;
-      opacity: 0;
-      visibility: hidden;
-      transition: var(--transition);
+      gap: 10px;
+      cursor: pointer;
+      transition: 0.2s;
+      margin: 0.8rem 0 1rem;
+      box-shadow: 0 6px 14px rgba(0,102,51,0.25);
     }
 
-    .loading.active {
+    .btn-login:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.02);
+    }
+
+    .forgot-link {
+      text-align: center;
+      margin: 0.5rem 0;
+    }
+
+    .forgot-link button {
+      background: none;
+      border: none;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #FF8C00;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .footer-note {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 0.7rem;
+      color: #6c757d;
+      border-top: 1px solid #eef2f5;
+      padding-top: 1.2rem;
+    }
+
+    .footer-note a {
+      color: #006633;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .msg-alert {
+      padding: 0.75rem;
+      border-radius: 60px;
+      font-size: 0.8rem;
+      text-align: center;
+      margin-bottom: 1.2rem;
+    }
+
+    .msg-error {
+      background: #ffece6;
+      color: #bc4e2c;
+      border-left: 4px solid #f97316;
+    }
+
+    .msg-success {
+      background: #e3f7e8;
+      color: #006633;
+      border-left: 4px solid #006633;
+    }
+
+    /* loading overlay */
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      border-radius: 2rem;
+      opacity: 0;
+      visibility: hidden;
+      transition: 0.2s;
+    }
+
+    .loading-overlay.active {
       opacity: 1;
       visibility: visible;
     }
 
     .spinner {
-      width: 50px;
-      height: 50px;
-      border: 5px solid rgba(67, 97, 238, 0.2);
-      border-top: 5px solid var(--primary);
+      width: 48px;
+      height: 48px;
+      border: 4px solid #e2edf4;
+      border-top: 4px solid #006633;
       border-radius: 50%;
-      animation: spin 1s linear infinite;
+      animation: spin 0.7s linear infinite;
     }
 
     @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      to { transform: rotate(360deg); }
     }
 
-    .social-login {
-      display: flex;
-      gap: 15px;
-      margin-top: 20px;
-    }
-
-    .social-btn {
-      flex: 1;
-      padding: 12px;
-      border-radius: var(--border-radius);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--light);
-      border: 1px solid var(--light-gray);
-      color: var(--dark);
-      font-weight: 500;
-      transition: var(--transition);
-    }
-
-    .social-btn:hover {
-      background: var(--light-gray);
-      transform: translateY(-2px);
-    }
-
-    .social-btn i {
-      margin-right: 8px;
-      font-size: 18px;
-    }
-
-    .google { color: #DB4437; }
-    .facebook { color: #4267B2; }
-    .github { color: #333; }
-
-    .footer {
-      text-align: center;
-      margin-top: 30px;
-      color: var(--gray);
-      font-size: 14px;
-    }
-
-    .footer a {
-      color: var(--primary);
-      text-decoration: none;
-      font-weight: 500;
-    }
-
-    .footer a:hover {
-      text-decoration: underline;
-    }
-
-    /* Responsive Design */
-    @media (min-width: 768px) {
-      .illustration {
-        display: flex;
+    /* responsive */
+    @media (max-width: 800px) {
+      body {
+        padding: 1rem;
+      }
+      .hero-panel {
+        display: none;
+      }
+      .form-panel {
+        flex: 1;
+        padding: 1.8rem;
+      }
+      .login-wrapper {
+        max-width: 500px;
+        margin: 0 auto;
+      }
+      .logo-text {
+        font-size: 1.2rem;
+      }
+      .form-header h1 {
+        font-size: 1.5rem;
       }
     }
 
     @media (max-width: 480px) {
-      .auth-container {
-        padding: 40px 20px;
+      .form-panel {
+        padding: 1.5rem;
       }
-    
-      .form-header h1 {
-        font-size: 24px;
+      .input-icon-wrapper input {
+        padding: 0.8rem 1rem 0.8rem 2.5rem;
       }
-    
-      .social-login {
-        flex-direction: column;
+      .btn-login {
+        padding: 0.8rem;
       }
     }
   </style>
 </head>
 <body>
-<div class="container">
-  <div class="illustration">
-    <i class="fas fa-bolt" style="font-size: 80px; margin-bottom: 30px; color: #ffc107;"></i>
-    <h2>Smart Grid Access</h2>
-    <p>Log in to monitor, control, and manage your substation in real-time with secure access.</p>
-   
-    <div style="margin-top: 30px; display: flex; gap: 15px;">
-      <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; width: 140px;">
-        <i class="fas fa-network-wired" style="font-size: 36px; margin-bottom: 10px;"></i>
-        <p>Live Grid Data</p>
+<div class="login-wrapper">
+  <!-- Left panel: NEA themed illustration -->
+  <div class="hero-panel">
+    <div class="hero-icon">
+      <i class="fas fa-bolt"></i>
+    </div>
+    <h2>Smart Grid<br>Management System</h2>
+    <p>Nepal Electricity Authority · Secure access to substation analytics & peak load monitoring.</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <i class="fas fa-chart-line"></i>
+        <span>Real-time peak load</span>
       </div>
-      <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; width: 140px;">
-        <i class="fas fa-plug" style="font-size: 36px; margin-bottom: 10px;"></i>
-        <p>Remote Control</p>
+      <div class="feature-card">
+        <i class="fas fa-microchip"></i>
+        <span>Transformer health</span>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-shield-alt"></i>
+        <span>Role-based access</span>
       </div>
     </div>
   </div>
-  
-    <div class="auth-container">
-      <div class="logo">
-        <div class="logo-icon">
-          <i class="fas fa-fire"></i>
-        </div>
-        <div class="logo-text">Smart Grid management System</div>
-      </div>
-    
-      <div class="form-header">
-        <h1>Welcome Back</h1>
-        <p>Sign in to continue to your account</p>
-      </div>
-    
-      <div id="msg"></div>
-    
-      <div class="form-group">
-        <label for="email">Email Address</label>
-        <div class="input-with-icon">
-          <i class="fas fa-envelope input-icon"></i>
-          <input type="email" id="email" class="form-control" placeholder="Enter your email">
-        </div>
-      </div>
-    
-      <div class="form-group">
-        <label for="password">Password</label>
-        <div class="input-with-icon">
-          <i class="fas fa-lock input-icon"></i>
-          <input type="password" id="password" class="form-control" placeholder="Enter your password">
-          <button class="password-toggle" id="togglePassword">
-            <i class="fas fa-eye"></i>
-          </button>
-        </div>
-      </div>
-    
-      <button class="btn btn-primary" onclick="login()">
-        <i class="fas fa-sign-in-alt"></i> Login
-      </button>
-    
 
-    
-      <div style="text-align: center; margin-top: 15px;">
-        <button class="btn-link" onclick="forgotPassword()">
-          Forgot Password?
+  <!-- Right panel: login form -->
+  <div class="form-panel" style="position: relative;">
+    <div class="logo-area">
+      <div class="logo-badge">
+        <i class="fas fa-charging-station"></i>
+      </div>
+      <div class="logo-text">NEA<span> · GRID</span></div>
+    </div>
+
+    <div class="form-header">
+      <h1>Welcome back</h1>
+      <p>Login to access the substation dashboard</p>
+    </div>
+
+    <div id="msg"></div>
+
+    <div class="input-group">
+      <label><i class="fas fa-envelope" style="margin-right: 6px;"></i> Email address</label>
+      <div class="input-icon-wrapper">
+        <i class="fas fa-envelope"></i>
+        <input type="email" id="email" placeholder="operator@nea.gov.np" autocomplete="email">
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label><i class="fas fa-lock"></i> Password</label>
+      <div class="input-icon-wrapper">
+        <i class="fas fa-lock"></i>
+        <input type="password" id="password" placeholder="··········" autocomplete="current-password">
+        <button class="password-toggle" id="togglePassword" type="button">
+          <i class="fas fa-eye"></i>
         </button>
       </div>
-    
-    
-    
-      <div class="footer">
-        <p>By continuing, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</p>
-      </div>
-    
-      <div class="loading" id="loading">
-        <div class="spinner"></div>
-      </div>
+    </div>
+
+    <button class="btn-login" onclick="login()">
+      <i class="fas fa-arrow-right-to-bracket"></i> Sign In
+    </button>
+
+    <div class="forgot-link">
+      <button onclick="forgotPassword()" id="forgotBtn">Forgot password?</button>
+    </div>
+
+    <div class="footer-note">
+      <p>🔒 Authorized access only · Nepal Electricity Authority<br> <a href="#">Secure login</a> with Single Sign‑On</p>
+    </div>
+
+    <div id="loading" class="loading-overlay">
+      <div class="spinner"></div>
     </div>
   </div>
+</div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getAuth,
-      signInWithEmailAndPassword,
-      createUserWithEmailAndPassword,
-      sendPasswordResetEmail,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getAuth,
+    signInWithEmailAndPassword,
+    sendPasswordResetEmail,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAMs4MtFfDVIFntC9hPYH_MClW1VsIJTZo",
-      authDomain: "gridlogin.firebaseapp.com",
-      databaseURL: "https://gridlogin-default-rtdb.firebaseio.com/",
-      projectId: "gridlogin",
-      storageBucket: "gridlogin.firebasestorage.app",
-      messagingSenderId: "860236561452",
-      appId: "1:860236561452:web:3b63bb006b0858b3426589"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyAMs4MtFfDVIFntC9hPYH_MClW1VsIJTZo",
+    authDomain: "gridlogin.firebaseapp.com",
+    databaseURL: "https://gridlogin-default-rtdb.firebaseio.com/",
+    projectId: "gridlogin",
+    storageBucket: "gridlogin.firebasestorage.app",
+    messagingSenderId: "860236561452",
+    appId: "1:860236561452:web:3b63bb006b0858b3426589"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
 
-    // DOM elements
-    const loading = document.getElementById('loading');
-    const togglePassword = document.getElementById('togglePassword');
-    const passwordField = document.getElementById('password');
-    const msgElement = document.getElementById('msg');
+  // DOM elements
+  const loadingEl = document.getElementById('loading');
+  const togglePassword = document.getElementById('togglePassword');
+  const passwordField = document.getElementById('password');
+  const msgElement = document.getElementById('msg');
 
-    // Toggle password visibility
-    togglePassword.addEventListener('click', function() {
+  // Helper UI
+  function showLoading() { if(loadingEl) loadingEl.classList.add('active'); }
+  function hideLoading() { if(loadingEl) loadingEl.classList.remove('active'); }
+
+  function showMsg(msg, isSuccess = false) {
+    if(!msgElement) return;
+    msgElement.innerText = msg;
+    msgElement.className = `msg-alert ${isSuccess ? 'msg-success' : 'msg-error'}`;
+    setTimeout(() => {
+      msgElement.innerText = '';
+      msgElement.className = '';
+    }, 5000);
+  }
+
+  // Toggle password visibility
+  if (togglePassword) {
+    togglePassword.addEventListener('click', () => {
       const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
       passwordField.setAttribute('type', type);
-      this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+      togglePassword.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
     });
-
-    // Show loading indicator
-    function showLoading() {
-      loading.classList.add('active');
-    }
-
-    // Hide loading indicator
-    function hideLoading() {
-      loading.classList.remove('active');
-    }
-
-    // Show message
-    function showMsg(msg, success = false) {
-      msgElement.innerText = msg;
-      msgElement.className = success ? 'msg-success' : 'msg-error';
-      setTimeout(() => {
-        msgElement.innerText = '';
-        msgElement.className = '';
-      }, 5000);
-    }
-
-    // Login function
-    window.login = function () {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-    
-      if (!email || !password) {
-        showMsg("Please fill in all fields");
-        return;
-      }
-    
-      showLoading();
-    
-      signInWithEmailAndPassword(auth, email, password)
-  .then(() => {
-    hideLoading();
-
-    const userEmail = auth.currentUser.email;
-
-    if (
-      userEmail === "mainahiya132ss@gmail.com" ||
-      userEmail === "abc2@gmail.com"
-    ) {
-      window.location.href = "mainahiya.html";
-    }
-    else if (
-      userEmail === "xyz@gmail.com" ||
-      userEmail === "xyz2@gmail.com"
-    ) {
-      window.location.href = "xyz.html";
-    }
-    else {
-      window.location.href = "home.html";
-    }
-
-  })
-  .catch(error => {
-    hideLoading();
-    showMsg(error.message);
-  });
-    };
-
- 
-    // Forgot password function
-    window.forgotPassword = function () {
-      const email = document.getElementById("email").value;
-    
-      if (!email) {
-        showMsg("Please enter your email address");
-        return;
-      }
-    
-      showLoading();
-    
-      sendPasswordResetEmail(auth, email)
-        .then(() => {
-          hideLoading();
-          showMsg("Password reset link sent to your email", true);
-        })
-        .catch(error => {
-          hideLoading();
-          showMsg(error.message);
-        });
-    };
-
-// Redirect if already logged in
-onAuthStateChanged(auth, user => {
-  if (user) {
-
-    const userEmail = user.email;
-
-    if (
-      userEmail === "mainahiya132ss@gmail.com" ||
-      userEmail === "abc2@gmail.com"
-    ) {
-      window.location.href = "mainahiya.html";
-    }
-    else if (
-      userEmail === "xyz@gmail.com" ||
-      userEmail === "xyz2@gmail.com"
-    ) {
-      window.location.href = "xyz.html";
-    }
-    else {
-      window.location.href = "home.html";
-    }
-
   }
-});
-  </script>
+
+  // Login logic (preserved exact routing)
+  window.login = function () {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    if (!email || !password) {
+      showMsg("Please fill in both email and password.");
+      return;
+    }
+
+    showLoading();
+
+    signInWithEmailAndPassword(auth, email, password)
+      .then(() => {
+        hideLoading();
+        const userEmail = auth.currentUser.email;
+        // routing exactly as original (mainahiya / xyz / home)
+        if (userEmail === "mainahiya132ss@gmail.com" || userEmail === "abc2@gmail.com") {
+          window.location.href = "mainahiya.html";
+        }
+        else if (userEmail === "xyz@gmail.com" || userEmail === "xyz2@gmail.com") {
+          window.location.href = "xyz.html";
+        }
+        else {
+          window.location.href = "home.html";
+        }
+      })
+      .catch(error => {
+        hideLoading();
+        let friendlyMsg = error.message;
+        if (error.code === 'auth/invalid-credential') friendlyMsg = 'Invalid email or password.';
+        showMsg(friendlyMsg);
+      });
+  };
+
+  // Forgot password function (unchanged behavior)
+  window.forgotPassword = function () {
+    const email = document.getElementById("email").value.trim();
+    if (!email) {
+      showMsg("Please enter your email address to reset password.");
+      return;
+    }
+
+    showLoading();
+    sendPasswordResetEmail(auth, email)
+      .then(() => {
+        hideLoading();
+        showMsg("✅ Password reset link sent to your email. Check inbox.", true);
+      })
+      .catch((error) => {
+        hideLoading();
+        showMsg(error.message);
+      });
+  };
+
+  // Auto redirect if already logged in (preserve original routing)
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      const userEmail = user.email;
+      if (userEmail === "mainahiya132ss@gmail.com" || userEmail === "abc2@gmail.com") {
+        window.location.href = "mainahiya.html";
+      }
+      else if (userEmail === "xyz@gmail.com" || userEmail === "xyz2@gmail.com") {
+        window.location.href = "xyz.html";
+      }
+      else {
+        window.location.href = "home.html";
+      }
+    }
+  });
+</script>
 </body>
 </html>
-
