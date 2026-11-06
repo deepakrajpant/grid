@@ -849,6 +849,8 @@ button.opt:hover{border-color:var(--violet)}
 .profile-action-admin { background: #f7f3ff; }
 .profile-action-leaderboard .profile-action-icon { background: #e5f6ff; color: #126a94; }
 .profile-action-premium .profile-action-icon { background: #fff2d4; color: #935707; }
+.profile-action-support .profile-action-icon { background: #e3f8ea; color: #168343; }
+.profile-action-support { background: linear-gradient(100deg, #f1fff5, #fff); }
 .profile-action-logout { color: #9b314b; }
 .profile-action-logout .profile-action-icon { background: #ffe9ef; color: #9b314b; }
 .latest-attempt:hover, .profile-action:hover { border-color: #a996da; }
