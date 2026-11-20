@@ -1,6 +1,6 @@
 /* ============================================================
    Dream Japan — JFT Mock Test (3-file SPA)
-   v4.4.0 — latest results, average leaderboard, and admin question reports
+   v4.5.0 — on-demand reads with bounded caches; existing screens and access checks
    ============================================================ */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
@@ -31,7 +31,7 @@ const QUESTIONS_DOC = "jftoctnovset/QORwII8D7qLZ7wuCDW36";
 const CACHE_KEY = "dj_q_cache_v5";               // v5: localStorage + 60min
 const CACHE_TTL = 60 * 60 * 1000;                // was 30 min
 const PLANS_CACHE_KEY = "dj_plans_v1";
-const PLANS_TTL = 24 * 60 * 60 * 1000;           // 24h
+const PLANS_TTL = 30 * 60 * 1000; // public plan display cache; checkout revalidates
 const PROFILE_CACHE_KEY = "dj_profile_v1";
 const PROFILE_TTL = 24 * 60 * 60 * 1000;
 const RESULTS_CACHE_KEY = "dj_results_v1";
@@ -84,7 +84,7 @@ const fastReads=new Map(),fastJobs=new Map(),warmMedia=new Map();
 const EXAM_SNAPSHOT_KEY=EXAM_STATE_KEY+"_questions";
 let savedSnapshotFor="";
 function readScope(key){return `${state.user?.uid||"guest"}:${state.isAdmin?"admin":"student"}:${key}`;}
-function memoRead(key,loader,ttl=15000){
+function memoRead(key,loader,ttl=({adminUsers:120000,adminRequests:60000,pendingRequests:30000,adminOpenReports:30000,legacyResults:120000})[key]??15000){
  const scoped=readScope(key),entry=fastReads.get(scoped),now=Date.now();
  if(entry && (entry.pending || now-entry.time<ttl))return entry.promise;
  const next={pending:true,time:now,promise:null};
@@ -250,6 +250,7 @@ function loadResultsCache(uid) {
   } catch { return null; }
 }
 function invalidateResultsCache(uid) {
+  clearFastReads("results");demandState.delete(readScope("results"));
   try { localStorage.removeItem(`${RESULTS_CACHE_KEY}_${uid}`); } catch {}
 }
 
@@ -544,7 +545,7 @@ async function readQuestionRows(){
   const snapshot=await getDoc(doc(db,QUESTIONS_DOC));
   if(!snapshot.exists())throw new Error("Questions not found");
   return rowList(snapshot.data());
- },30000);
+ },300000);
 }
 async function loadQuestions() {
   const rows = await fetchQuestionsFromFirestore();
@@ -618,6 +619,14 @@ async function cleanUpLegacy(uid, legacy, latest) {
 
 async function loadResults(uid) {
   try {
+    const cached=JSON.parse(localStorage.getItem(`${RESULTS_CACHE_KEY}_${uid}`)||"null");
+    if(cached && Array.isArray(cached.results) && Date.now()-cached.ts>=0 && Date.now()-cached.ts<120000)
+      return latestBySet([...cached.results,...readLocalAttempts(uid)]);
+  } catch {}
+  return memoRead("results",()=>fetchResultsFromCloud(uid),120000);
+}
+async function fetchResultsFromCloud(uid) {
+  try {
     let cloud = resultRows(await getDocs(collection(db, "users", uid, "latestResults")));
     if (state.user?.uid !== uid) return [];
     if (!cloud.length) {
@@ -647,29 +656,25 @@ async function loadResults(uid) {
     return latestBySet([...(loadResultsCache(uid) || []), ...readLocalAttempts(uid)]);
   }
 }
-async function loadPlans() {
-  try {
-    const snap = await getDocs(collection(db, "plans"));
-    const plans = [];
-    snap.forEach(d => plans.push({ id: d.id, ...d.data() }));
-    plans.sort((a, b) => (a.price || 0) - (b.price || 0));
-    savePlansCache(plans);
-    return plans;
-  } catch { return loadPlansCache() || []; }
+async function loadPlans(force=false) {
+  if(!force){const cached=loadPlansCache();if(Array.isArray(cached))return cached;}
+  const uid=state.user?.uid,generation=dataGeneration;
+  const snap=await memoRead("plans",()=>getDocs(collection(db,"plans")),force?0:1800000);
+  const plans=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.price||0)-(b.price||0));
+  if(sameDataSession(uid,generation))savePlansCache(plans);
+  return plans;
 }
-async function loadPlansCached() {
-  const cached = loadPlansCache();
-  if (cached) return cached;
-  return await loadPlans();
+async function loadPlansCached(){return loadPlans();}
+async function loadLeaderboard(){
+  const uid=state.user?.uid,generation=dataGeneration,key="dj_lb_v2_"+uid;
+  const cached=cachedPayload(key,300000,sessionStorage);
+  if(Array.isArray(cached))return cached;
+  const snap=await memoRead("leaderboard",()=>getDocs(query(collection(db,"leaderboard"),orderBy("averagePercentage","desc"),limit(20))),300000);
+  const rows=snap.docs.map(d=>({uid:d.id,streak:0,...d.data()}));
+  if(sameDataSession(uid,generation))storePayload(key,rows,sessionStorage);
+  return rows;
 }
-async function loadLeaderboard() {
- try {
-  const snap = await memoRead("leaderboard", () => getDocs(query(
-    collection(db, "leaderboard"), orderBy("averagePercentage", "desc"), limit(20)
-  )), 30000);
-  return snap.docs.map(d=>({uid:d.id,streak:0,...d.data()}));
- } catch(e) {toast("Leaderboard: "+e.message,"err"); return [];}
-}
+
 async function bumpStreak() {
   if (!state.user || !state.profile) return;
   const streak = state.profile.streak || { count: 0, last: null };
@@ -762,8 +767,10 @@ function render() {
   else if (s === "admin") html = state.isAdmin ? renderAdmin() : renderHomeScreen();
   else html = renderHomeScreen();
 
+  html = screenDataPlaceholder(s) || html;
   root.innerHTML = html;
   postRender();bindMedia();updateInstallBanner();bindFastButtons(root);bindAddedFeatures();updateRenewalNotice();
+  void ensureCurrentScreenData();
 }
 
 function topbarHTML() {
@@ -1389,7 +1396,7 @@ async function loadQuestionReports() {
   const status = filter.value;
   list.innerHTML = '<p class="muted center">Loading reports…</p>';
   try {
-    const snapshot = await getDocs(query(collection(db, "questionReports"), where("status", "==", status)));
+    const snapshot = await memoRead("reports:"+status,()=>getDocs(query(collection(db, "questionReports"), where("status", "==", status))),60000);
     if (!list.isConnected || filter.value !== status) return;
     const reports = resultRows(snapshot).sort((a, b) => membershipUntil(b.createdAt) - membershipUntil(a.createdAt));
     list.innerHTML = reports.map(report => `<article class="admin-q-item question-report">
@@ -1405,7 +1412,7 @@ async function loadQuestionReports() {
         await updateDoc(doc(db, "questionReports", button.dataset.resolveReport), {
           status: "resolved", resolvedAt: serverTimestamp()
         });
-        clearFastReads("adminOpenReports");
+        clearFastReads("adminOpenReports","reports:open","reports:resolved");
         toast("Report resolved", "ok");
         await loadQuestionReports();
       };
@@ -1460,7 +1467,7 @@ function postRender() {
   if($("copyPastPassword")) $("copyPastPassword").onclick=async()=>{try{await navigator.clipboard.writeText("myreservasi");toast("Password copied","ok");}catch(e){const el=document.createElement("textarea");el.value="myreservasi";document.body.append(el);el.select();const ok=document.execCommand("copy");el.remove();toast(ok?"Password copied":"Please copy the password manually",ok?"ok":"err");}};
   if($("retryCloud"))$("retryCloud").onclick=async()=>{const r=loadResult();if(!r)return;try{await saveResultToDb(r);render();toast("Saved to cloud","ok");}catch(e){toast(e.message,"err");}};
   if($("pendingAdminButton"))$("pendingAdminButton").onclick=()=>{adminTab="requests";navigate("admin");};
-  if($("retryContent"))$("retryContent").onclick=()=>loadDataInBackground();
+  if($("retryContent"))$("retryContent").onclick=retryCurrentScreenData;
   document.querySelectorAll("[data-go]").forEach(el => {
     el.onclick = () => navigate(el.dataset.go);
   });
@@ -1927,8 +1934,12 @@ async function saveResultToDb(result) {
     saveLocalAttempts();
     if (loadResult()?.attemptId === result.attemptId) saveResult(saved);
     saveResultsCache(uid, state.results);
-    clearFastReads("leaderboard");
-    void loadLeaderboard().then(rows => { if (state.user?.uid === uid) state.leaderboard = rows; });
+    clearFastReads("leaderboard","results");
+    demandState.delete(readScope("leaderboard"));
+    try{sessionStorage.removeItem("dj_lb_v2_"+uid);}catch{}
+    const now=Date.now();demandState.set(readScope("results"),{time:now,pending:false,error:null,promise:Promise.resolve(state.results)});
+    // The leaderboard is fetched on its next visit, not after every test.
+
   });
 }
 function stopAudio() {
@@ -1967,6 +1978,7 @@ async function playAudio(q) {
 /* ============ PRACTICE ============ */
 async function startPractice(sectionKey) {
   if(!await authorizeContent()) return;
+  try {await ensureQuestionsForUse();} catch(error){toast(error.message,"err");return;}
   if(!hasPremium()) return navigate("premium");
   const pool = [];
   state.sets.forEach(s => {
@@ -2111,7 +2123,7 @@ function bindAdminTab() {
   if (adminTab === "requests") loadRequests();
   if (adminTab === "reports") {
     $("reportFilter").onchange = loadQuestionReports;
-    $("refreshReports").onclick = loadQuestionReports;
+    $("refreshReports").onclick = () => {clearFastReads("reports:open","reports:resolved");return loadQuestionReports();};
     loadQuestionReports();
   }
   if (adminTab === "questions") {
@@ -2125,7 +2137,7 @@ function bindAdminTab() {
     loadQs();
   }
   if (adminTab === "settings") {
-    $("saveConfig").onclick=async()=>{try{appConfig={...appConfig,esewaNumber:$("cfgEsewa").value.trim(),whatsappNumber:$("cfgWhatsapp").value.trim(),qrPath:$("cfgQR").value.trim(),installPromptEnabled:$("cfgInstall").checked};await setDoc(doc(db,"appConfig","main"),appConfig,{merge:true});clearFastReads("config");toast("Settings saved","ok");}catch(e){toast(e.message,"err");}};
+    $("saveConfig").onclick=async()=>{try{appConfig={...appConfig,esewaNumber:$("cfgEsewa").value.trim(),whatsappNumber:$("cfgWhatsapp").value.trim(),qrPath:$("cfgQR").value.trim(),installPromptEnabled:$("cfgInstall").checked};await setDoc(doc(db,"appConfig","main"),appConfig,{merge:true});clearFastReads("config");storePayload("dj_config_v2",appConfig);demandState.delete(readScope("config"));toast("Settings saved","ok");}catch(e){toast(e.message,"err");}};
     $("addPlan").onclick=()=>editPlan();
     document.querySelectorAll("[data-edit-plan]").forEach(b=>b.onclick=()=>editPlan(b.dataset.editPlan));
     $("exportBtn").onclick = exportJSON;
@@ -2174,7 +2186,8 @@ async function loadStats() {
       return expiry > 0 && expiry <= Date.now();
     }).length);
   });
-  track("requests", memoRead("pendingRequests", () => getCountFromServer(query(collection(db, "accessRequests"), where("status", "==", "pending")))), snap => show("statPending", snap.data().count));
+  if(state._pendingSnapshot)show("statPending",state._pendingSnapshot.size);
+  else track("requests", memoRead("pendingRequests", () => getCountFromServer(query(collection(db, "accessRequests"), where("status", "==", "pending")))), snap => show("statPending", snap.data().count));
   track("questions", readQuestionRows(), rows => show("statQuestions", rows.length));
   track("reports", memoRead("adminOpenReports", () => getCountFromServer(query(collection(db, "questionReports"), where("status", "==", "open")))), snap => show("statReports", snap.data().count));
   await Promise.all(jobs);
@@ -2408,7 +2421,11 @@ async function importJSON() {
   } catch (e) { toast("Failed: " + e.message, "err"); }
 }
 async function grantPremium(uid) {
- const plans=state.plans;
+ const adminUid=state.user?.uid;
+ let plans;try{plans=await loadPlans();}catch(error){toast(error.message,"err");return;}
+ if(!state.isAdmin||state.user?.uid!==adminUid)return;
+ state.plans=plans;
+ if(!plans.length)return modal("No plans available","Add a plan in Settings first.");
  modal("Grant Premium",`<label>Plan</label><select class="input" id="grantPlan">${plans.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join("")}</select><label>Number of days</label><input id="grantDays" class="input" type="number" min="1" max="3650" step="1" value="15"><label>Admin note</label><textarea id="grantNote" class="input"></textarea>`,[
  {label:"Cancel",cls:"btn-ghost"},{label:"Activate",onClick:async()=>{const days=Number($("grantDays").value);if(!Number.isInteger(days)||days<1||days>3650)return toast("Enter 1 to 3650 whole days","err");if(await safeAction("adminMembership",{action:"grant",uid,planId:$("grantPlan").value,days,note:$("grantNote").value})) {toast("Premium activated","ok");loadStudents();}}}]);
 }
@@ -2444,6 +2461,135 @@ async function rejectRequest(rid) {
   } catch (e) { toast("Failed: " + e.message, "err"); }
 }
 
+/* Read budget: screen-scoped loading; no database schema or rules changes. */
+const demandState = new Map();
+let dataGeneration = 0, demandRenderQueued = false;
+const demandRenderRequests = [];
+const READ_TTL = { results:120000, plans:1800000, config:1800000, leaderboard:300000, questions:300000 };
+function cachedPayload(key, ttl, storage=localStorage) {
+  try {
+    const c=JSON.parse(storage.getItem(key)||"null");
+    if(c && Number.isFinite(c.ts) && Date.now()-c.ts>=0 && Date.now()-c.ts<ttl)return c.value;
+  } catch {}
+  return null;
+}
+function storePayload(key, value, storage=localStorage) {
+  try {storage.setItem(key,JSON.stringify({ts:Date.now(),value}));} catch {}
+}
+function sameDataSession(uid, generation) {return state.user?.uid===uid && dataGeneration===generation;}
+function resetDemandState() {
+  dataGeneration++;demandState.clear();clearFastReads();
+  state._pendingSnapshot=null;state.contentError=null;
+}
+function resourceUsedOnScreen(key, screen) {
+  if(key==="results")return ["home","profile","sets","start"].includes(screen);
+  if(key==="questions")return needQuestionScreen(screen);
+  if(key==="leaderboard")return screen==="leaderboard";
+  if(key==="plans")return screen==="premium" || state.isAdmin&&screen==="admin"&&adminTab==="settings";
+  return key==="config" && (screen!=="admin" || adminTab==="settings");
+}
+function queueDemandRender(uid, generation, key) {
+  demandRenderRequests.push({uid,generation,key});
+  if(demandRenderQueued)return;
+  demandRenderQueued=true;
+  queueMicrotask(()=>{
+    demandRenderQueued=false;
+    const requests=demandRenderRequests.splice(0);
+    if(!requests.some(r=>sameDataSession(r.uid,r.generation)&&resourceUsedOnScreen(r.key,state.screen)))return;
+    if(state.exam||state.practice||$("modal")?.classList.contains("show")||document.activeElement?.matches("input,textarea,select"))return;
+    render();
+  });
+}
+function demandRecord(key) {return demandState.get(readScope(key));}
+function requestScreenResource(key, loader, force=false) {
+  const scoped=readScope(key),previous=demandState.get(scoped),ttl=READ_TTL[key];
+  if(previous?.pending)return previous.promise;
+  if(!force && previous && Date.now()-previous.time<(previous.error?30000:ttl))return previous.promise;
+  const uid=state.user?.uid,generation=dataGeneration;
+  const record={pending:true,time:Date.now(),error:null,promise:null};
+  record.promise=Promise.resolve().then(loader).then(value=>{
+    record.pending=false;record.time=Date.now();
+    if(sameDataSession(uid,generation))queueDemandRender(uid,generation,key);
+    return value;
+  },error=>{
+    record.pending=false;record.time=Date.now();record.error=error;
+    if(sameDataSession(uid,generation)){
+      if(key==="questions")state.contentError=error.message||"Could not load questions";
+      queueDemandRender(uid,generation,key);
+    }
+    throw error;
+  });
+  // Consumers may await the original promise; scheduled loads also handle rejection.
+  record.promise.catch(()=>{});demandState.set(scoped,record);return record.promise;
+}
+async function loadAppConfig(force=false) {
+  const key="dj_config_v2",cached=!force && cachedPayload(key,READ_TTL.config);
+  if(cached){appConfig={...appConfig,...cached};return appConfig;}
+  const snapshot=await memoRead("config",()=>getDoc(doc(db,"appConfig","main")),force?0:READ_TTL.config);
+  const value=snapshot.exists()?snapshot.data():{};
+  storePayload(key,value);appConfig={...appConfig,...value};return appConfig;
+}
+function needQuestionScreen(screen) {
+  return (["sets","start","practice","bookmarks"].includes(screen) || state.isAdmin&&screen==="admin"&&adminTab==="settings") && hasPremium() &&
+    (screen!=="bookmarks" || (state.profile?.bookmarks||[]).length>0);
+}
+function demandLoadingHTML(screen, message, failed=false) {
+  return `${topbarHTML()}<main class="wrap page-space"><div class="card center" role="status">${failed?"":'<div class="spinner" aria-hidden="true"></div>'}<p class="muted">${esc(message)}</p>${failed?'<button class="btn btn-primary btn-sm mt-2" id="retryContent">Retry loading</button>':""}</div></main>${bottomNavHTML(screen==="leaderboard"?"home":screen==="start"?"sets":screen)}`;
+}
+function screenDataPlaceholder(screen) {
+  if(!state.user || state.exam || state.practice)return "";
+  const content=demandRecord("questions");
+  if(screen!=="admin"&&needQuestionScreen(screen)&&!state.sets.length){
+    return demandLoadingHTML(screen,content?.error?.message||"Loading questions…",!!content?.error);
+  }
+  const plansNeeded=screen==="premium";
+  if(plansNeeded&&!state.plans.length&&demandRecord("plans")?.error)return demandLoadingHTML(screen,"Could not load plans. Please retry.",true);
+  if(plansNeeded&&!state.plans.length&&!demandRecord("plans"))return demandLoadingHTML(screen,"Loading plans…");
+  if(plansNeeded&&!state.plans.length&&demandRecord("plans")?.pending)return demandLoadingHTML(screen,"Loading plans…");
+  if(screen==="leaderboard"&&!state.leaderboard.length){
+    const lb=demandRecord("leaderboard");
+    if(!lb||lb.pending)return demandLoadingHTML(screen,"Loading leaderboard…");
+    if(lb.error)return demandLoadingHTML(screen,"Could not load leaderboard. Please retry.",true);
+  }
+  return "";
+}
+async function ensureQuestionsForUse(force=false) {
+  const uid=state.user?.uid,generation=dataGeneration;
+  return requestScreenResource("questions",async()=>{
+    if(!hasPremium())throw new Error("Premium access is required");
+    if(force)clearFastReads("questions");
+    const q=await loadQuestions();
+    if(!sameDataSession(uid,generation)||!hasPremium())throw new Error("Please sign in again");
+    state.sets=buildSets(q.rows);state.contentError=null;recomputeTotals();return q;
+  },force);
+}
+async function ensureCurrentScreenData() {
+  if(!state.user || ["loading","login","signup","exam","result","review"].includes(state.screen) || state.practice)return;
+  const uid=state.user.uid,generation=dataGeneration,screen=state.screen,jobs=[];
+  if(["home","profile","sets","start"].includes(screen))jobs.push(requestScreenResource("results",async()=>{
+    const rows=await loadResults(uid);
+    if(sameDataSession(uid,generation))state.results=rows;
+    return rows;
+  }));
+  if(screen==="premium" || state.isAdmin&&screen==="admin"&&adminTab==="settings")jobs.push(requestScreenResource("plans",async()=>{
+    const rows=await loadPlans();if(sameDataSession(uid,generation))state.plans=rows;return rows;
+  }));
+  if(screen==="leaderboard")jobs.push(requestScreenResource("leaderboard",async()=>{
+    const rows=await loadLeaderboard();if(sameDataSession(uid,generation))state.leaderboard=rows;return rows;
+  }));
+  if(needQuestionScreen(screen))jobs.push(ensureQuestionsForUse());
+  // Needed for the configured install suggestion and support details; one shared cache.
+  jobs.push(requestScreenResource("config",()=>loadAppConfig()));
+  setupAdminNotifications();
+  await Promise.allSettled(jobs);
+}
+async function retryCurrentScreenData() {
+  for(const key of ["questions","plans","leaderboard"]){demandState.delete(readScope(key));clearFastReads(key);}
+  state.contentError=null;
+  render();
+  await ensureCurrentScreenData();
+}
+
 /* ============ AUTH LISTENER & BOOT ============ */
 function renderWithBootTarget(screen, params) {
   if (screen === "loading" || screen === "login" || screen === "signup") {
@@ -2466,7 +2612,7 @@ function renderWithBootTarget(screen, params) {
 function setupRealtimeProfile(user) {
   if (state._userSub) state._userSub();
   state._userSub = onSnapshot(doc(db, "users", user.uid), snap => {
-    if (!snap.exists()) return;
+    if (state.user?.uid!==user.uid || !snap.exists()) return;
     const fresh = { uid: user.uid, ...snap.data() };
     const prev = state.profile;
     if(prev?.status!==fresh.status||membershipUntil(prev?.premium?.expiry)!==membershipUntil(fresh.premium?.expiry))clearFastReads("questions");
@@ -2476,7 +2622,10 @@ function setupRealtimeProfile(user) {
       if(state.screen==="practice")navigate("premium");
       if(state.exam){state.exam=null;clearExamState();clearInterval(state._tick);navigate("premium");}
     }
-    if(prev?.premium?.expiry?.seconds!==fresh.premium?.expiry?.seconds) loadDataInBackground();
+    if(prev?.status!==fresh.status || membershipUntil(prev?.premium?.expiry)!==membershipUntil(fresh.premium?.expiry)){
+      demandState.delete(readScope("questions"));
+      if(!["exam","result","review"].includes(state.screen))void ensureCurrentScreenData();
+    }
     state.isAdmin = (user.email === ADMIN_EMAIL && user.emailVerified);
     saveProfileCache(user.uid, fresh);
     // Only re-render on meaningful changes
@@ -2496,23 +2645,7 @@ function setupRealtimeProfile(user) {
 }
 
 async function loadDataInBackground() {
- return onceJob("background",async()=>{
- await Promise.allSettled([
-  (async()=>{state.plans=await loadPlans();})(),
-  (async () => {
-    const uid = state.user?.uid;
-    if (!uid) return;
-    const results = await loadResults(uid);
-    if (state.user?.uid !== uid) return;
-    state.results = results;
-    state.leaderboard = await loadLeaderboard();
-  })(),
-  (async()=>{const c=await getDoc(doc(db,"appConfig","main"));appConfig=c.exists()?{...appConfig,...c.data()}:appConfig;})(),
-  (async()=>{if(hasPremium()){try{const qr=await loadQuestions();state.sets=buildSets(qr.rows);state.contentError=null;recomputeTotals();}catch(e){state.contentError=e.message;state.sets=[];}}})()
- ]);
- if(state.user && ["home","profile","sets","start","premium","bookmarks","leaderboard"].includes(state.screen)) render();
- updateInstallBanner();setupAdminNotifications();
- });
+  return ensureCurrentScreenData();
 }
 
 let presenceTimer;
@@ -2544,6 +2677,8 @@ document.addEventListener("visibilitychange", () => {
 });
 
 onAuthStateChanged(auth, async (user) => {
+  resetDemandState();
+  if(state.user?.uid!==user?.uid){state.sets=[];state.plans=[];state.leaderboard=[];}
   clearInterval(presenceTimer);
   if (state._userSub) { state._userSub(); state._userSub = null; }
   if(state._requestsSub){state._requestsSub();state._requestsSub=null;}
@@ -2794,7 +2929,7 @@ function openQuestionReport() {
           createdAt: serverTimestamp()
         });
         if ($("reportReason")) closeModal();
-        clearFastReads("adminOpenReports");
+        clearFastReads("adminOpenReports","reports:open");
         toast("Report submitted to the admin", "ok");
       } catch (error) {
         toast("Could not submit report. Please try again.", "err");
@@ -2856,14 +2991,17 @@ function openImageZoom(src){
 }
 async function copyText(value){try{await navigator.clipboard.writeText(value);toast("Copied","ok");}catch{modal("Copy this value",`<input class="input" readonly value="${esc(value)}" onclick="this.select()">`);}}
 async function openPayment(planId){
- const plan=state.plans.find(p=>p.id===planId);if(!plan)return;
+ let plan=state.plans.find(p=>p.id===planId);if(!plan)return;
  const token=state._paymentOpenToken=(state._paymentOpenToken||0)+1;
  modal("Opening payment",`<p>Loading payment details…</p>`,[{label:"Cancel",cls:"btn-ghost"}]);
- let pending,c;
- try{[pending,c]=await Promise.all([getDocs(query(collection(db,"accessRequests"),where("uid","==",state.user.uid),where("status","==","pending"))),memoRead("config",()=>getDoc(doc(db,"appConfig","main")),30000)]);}catch(error){if(token===state._paymentOpenToken)closeModal();throw error;}
- if(token!==state._paymentOpenToken||!$("modal").classList.contains("show"))return;
+ const paymentUid=state.user.uid;
+ let pending,c,planSnapshot;
+ try{[pending,c,planSnapshot]=await Promise.all([getDocs(query(collection(db,"accessRequests"),where("uid","==",state.user.uid),where("status","==","pending"))),memoRead("config",()=>getDoc(doc(db,"appConfig","main")),0),getDoc(doc(db,"plans",planId))]);}catch(error){if(token===state._paymentOpenToken)closeModal();throw error;}
+ if(state.user?.uid!==paymentUid||token!==state._paymentOpenToken||!$("modal").classList.contains("show"))return;
+ if(!planSnapshot.exists()||planSnapshot.data().active===false)return modal("Plan unavailable","Please choose another plan.");
+ plan={id:planId,...planSnapshot.data()};
  if(!pending.empty)return modal("Request already pending","Your payment request is waiting for admin verification. Please do not submit again.");
- if(c.exists())appConfig={...appConfig,...c.data()};
+ if(c.exists()){appConfig={...appConfig,...c.data()};storePayload("dj_config_v2",c.data());}
  const email=state.user.email||"";
  modal("Pay with eSewa",`<p><b>${esc(plan.name)} · NPR ${Number(plan.price)}</b> · ${Number(plan.days)} days</p><img class="payment-qr" src="${esc(resolveUrl(appConfig.qrPath))}" alt="Admin eSewa payment QR"><p>eSewa number</p><button class="copy-value" id="copyEsewa">${esc(appConfig.esewaNumber||"Admin must configure the payment number")} · Copy</button><p class="mt-2">Payment remark: your email</p><button class="copy-value" id="copyEmail">${esc(email)} · Copy</button><label class="field mt-2">eSewa transaction reference<input id="paymentRef" class="input" maxlength="120" value="${esc(state._paymentDraft?.planId===planId?state._paymentDraft.reference:"")}" placeholder="Enter transaction ID" required></label><p class="muted small">Use this same browser after payment. Admin verification is required.</p>`,[{label:"Cancel",cls:"btn-ghost"},{label:"Payment completed",keepOpen:true,onClick:async()=>{
  const ref=$("paymentRef").value.trim();state._paymentDraft={planId,reference:ref};if(!ref)return toast("Enter your eSewa transaction reference","err");
@@ -2909,14 +3047,14 @@ function setupAdminNotifications(){
  if(!state.isAdmin||state._requestsSub)return;
  let first=true;
  state._requestsSub=onSnapshot(query(collection(db,"accessRequests"),where("status","==","pending")),snap=>{
- const previous=state._pendingCount||0;state._pendingCount=snap.size;clearFastReads("adminRequests","pendingRequests");
+ state._pendingSnapshot=snap;const previous=state._pendingCount||0;state._pendingCount=snap.size;clearFastReads("adminRequests","pendingRequests");
  if(!first&&snap.size>previous)toast("New premium payment request received","ok");first=false;
  if($("pendingAdminCount"))$("pendingAdminCount").textContent=String(snap.size);
  if(state.screen==="admin"&&adminTab==="requests")loadRequests();
  },e=>toast("Request notifications: "+e.message,"err"));
 }
 function enhancedSettings(){return `<div class="card mt-2"><h3>Payment and install settings</h3><label>eSewa number<input class="input" id="cfgEsewa" value="${esc(appConfig.esewaNumber)}"></label><label>WhatsApp number with country code<input class="input" id="cfgWhatsapp" value="${esc(appConfig.whatsappNumber)}"></label><label>QR path<input class="input" id="cfgQR" value="${esc(appConfig.qrPath)}"></label><label><input type="checkbox" id="cfgInstall" ${appConfig.installPromptEnabled?"checked":""}> Show install suggestion</label><button class="btn btn-primary mt-2" id="saveConfig">Save settings</button></div><div class="card mt-2"><h3>Premium plans</h3><div id="adminPlans">${state.plans.map(p=>`<div class="plan-row"><b>${esc(p.name)}</b><span>NPR ${Number(p.price)} · ${Number(p.days)} days · ${p.active!==false?"Active":"Hidden"}</span><button class="btn btn-sm btn-ghost" data-edit-plan="${esc(p.id)}">Edit</button></div>`).join("")}</div><button id="addPlan" class="btn btn-primary mt-2">Add plan</button></div>`;}
-function editPlan(id){const p=state.plans.find(p=>p.id===id)||{name:"",price:500,days:15,active:true,benefits:[]};modal(id?"Edit plan":"Add plan",`<label>Name<input id="planName" class="input" value="${esc(p.name)}"></label><label>Price NPR<input id="planPrice" class="input" type="number" min="0" value="${Number(p.price)}"></label><label>Days<input id="planDays" class="input" type="number" min="1" value="${Number(p.days)}"></label><label>Benefits, one per line<textarea id="planBenefits" class="input">${esc(p.benefits.join("\n"))}</textarea></label><label><input id="planActive" type="checkbox" ${p.active!==false?"checked":""}> Available for purchase</label>`,[{label:"Cancel",cls:"btn-ghost"},{label:"Save",onClick:async()=>{const plan={name:$("planName").value.trim(),price:Number($("planPrice").value),days:Number($("planDays").value),active:$("planActive").checked,benefits:$("planBenefits").value.split("\n").map(v=>v.trim()).filter(Boolean)};if(!plan.name||!Number.isFinite(plan.price)||plan.price<0||!Number.isInteger(plan.days)||plan.days<1||plan.days>3650)return toast("Enter valid plan details","err");try{await setDoc(doc(db,"plans",id||uuid()),plan);state.plans=await loadPlans();render();}catch(e){toast(e.message,"err");}}}]);}
+function editPlan(id){const p=state.plans.find(p=>p.id===id)||{name:"",price:500,days:15,active:true,benefits:[]};modal(id?"Edit plan":"Add plan",`<label>Name<input id="planName" class="input" value="${esc(p.name)}"></label><label>Price NPR<input id="planPrice" class="input" type="number" min="0" value="${Number(p.price)}"></label><label>Days<input id="planDays" class="input" type="number" min="1" value="${Number(p.days)}"></label><label>Benefits, one per line<textarea id="planBenefits" class="input">${esc(p.benefits.join("\n"))}</textarea></label><label><input id="planActive" type="checkbox" ${p.active!==false?"checked":""}> Available for purchase</label>`,[{label:"Cancel",cls:"btn-ghost"},{label:"Save",onClick:async()=>{const plan={name:$("planName").value.trim(),price:Number($("planPrice").value),days:Number($("planDays").value),active:$("planActive").checked,benefits:$("planBenefits").value.split("\n").map(v=>v.trim()).filter(Boolean)};if(!plan.name||!Number.isFinite(plan.price)||plan.price<0||!Number.isInteger(plan.days)||plan.days<1||plan.days>3650)return toast("Enter valid plan details","err");try{await setDoc(doc(db,"plans",id||uuid()),plan);state.plans=await loadPlans(true);demandState.delete(readScope("plans"));render();}catch(e){toast(e.message,"err");}}}]);}
 window.addEventListener("unhandledrejection",e=>{console.error(e.reason);toast(e.reason?.message||"Request failed. Please retry.","err");});
 window.addEventListener("offline",()=>toast("Connection lost. Current media may remain available; reconnect to save results.","warn"));
 
@@ -2951,14 +3089,19 @@ function updateRenewalNotice() {
 }
 async function openRenewal(planId) {
   if (!renewalEligible()) return toast("A previous premium membership is required for this offer.", "warn");
-  const plan = state.plans.find(p => p.id === planId && p.active !== false);
+  let plan = state.plans.find(p => p.id === planId && p.active !== false);
   if (!plan || !Number.isFinite(Number(plan.price)) || Number(plan.price) < 0) return toast("This plan is unavailable.", "warn");
   const uid = state.user.uid;
-  const discounted = renewalPrice(plan);
+  let discounted = renewalPrice(plan);
   modal("40% off your premium renewal", `<p>Preparing your WhatsApp renewal message…</p>`);
   try {
-    const config = await memoRead("config", () => getDoc(doc(db, "appConfig", "main")), 30000);
-    if (config.exists()) appConfig = {...appConfig, ...config.data()};
+    const [config, freshPlan] = await Promise.all([memoRead("config", () => getDoc(doc(db, "appConfig", "main")), 0), getDoc(doc(db,"plans",planId))]);
+    if(state.user?.uid!==uid||!$("modal").classList.contains("show"))return;
+    if(!freshPlan.exists()||freshPlan.data().active===false)return modal("Plan unavailable","Please choose another plan.",[{label:"Cancel",cls:"btn-ghost"}]);
+    plan={id:planId,...freshPlan.data()};
+    if(!Number.isFinite(Number(plan.price))||Number(plan.price)<0)throw new Error("Invalid plan price");
+    discounted=renewalPrice(plan);
+    if (config.exists()) {appConfig = {...appConfig, ...config.data()};storePayload("dj_config_v2",config.data());}
   } catch {
     if (state.user?.uid === uid && $("modal").classList.contains("show")) modal("Please reconnect", "Could not load the admin WhatsApp number. Please reconnect and try again.");
     return;
@@ -3012,7 +3155,10 @@ function renderLearningSummary() {
   const priorities = weak.slice(0,2);
   return `<section class="card learning-summary mt-2" aria-labelledby="learningSummaryTitle"><div class="flex-between"><div><h3 id="learningSummaryTitle">Latest results</h3></div><span class="badge badge-info">${latest.length}/${SET_NAMES.length} sets</span></div><p class="muted small mt-1">Latest attempt per set · Target: 80%.</p>${!latest.length ? `<div class="learning-empty"><b>Your progress starts here</b><p class="muted">Complete a mock test to see your results, weak areas and next steps.</p><button class="btn btn-primary btn-sm mt-2" data-go="sets">Start a mock test →</button></div>` : `<div class="learning-stats"><div><strong>${average === null ? "—" : average + "%"}</strong><span>Overall score</span></div><div><strong>${latest.filter(r=>Number(r.percentage)>=80).length}/${latest.length}</strong><span>Sets at target</span></div><div><strong>${weak.length}</strong><span>Sections to improve</span></div></div><div class="learning-section-list">${sections.map(s=>`<article class="learning-section"><div class="flex-between"><b>${esc(s.short)}</b><span class="badge ${s.percent === null ? "badge-muted" : s.percent < 60 ? "badge-danger" : s.percent < 80 ? "badge-warn" : "badge-success"}">${s.percent === null ? "No data" : s.percent + "% · " + (s.percent < 60 ? "Focus first" : s.percent < 80 ? "Improve" : "On target")}</span></div><div class="learning-track" role="meter" aria-label="${esc(s.name)}" aria-valuemin="0" aria-valuemax="100" ${s.percent === null ? 'aria-valuetext="No data"' : `aria-valuenow="${s.percent}"`}><span style="width:${s.percent ?? 0}%;background:${s.percent < 60 ? "var(--red)" : s.percent < 80 ? "var(--amber)" : "var(--green)"}"></span></div></article>`).join("")}</div><div class="learning-advice"><h4>${priorities.length ? "Focus on these next" : measured.length ? "Good progress. Keep going." : "Section details not available"}</h4>${priorities.map(s=>`<p><b>${esc(s.short)}:</b> ${tips[s.key]}</p>`).join("")}${!priorities.length ? `<p>${measured.length ? "Your measured sections are on target. Try remaining sets and review missed questions." : "Complete another mock test to unlock section tips."}</p>` : ""}<button class="btn btn-ghost btn-sm mt-1" data-go="practice">Practise a section →</button></div>`}<details class="learning-sets" ><summary>Latest results by set</summary>${SET_NAMES.map((set,i)=>{const r=latest.find(row=>Number(row.setIdx)===i+1);return `<div class="learning-set-row"><span><b>Set ${i+1}</b> · ${esc(set.name)}</span>${r ? `<button class="btn btn-ghost btn-sm" data-summary-set="${i+1}">${Number(r.percentage)||0}% · View result →</button>` : `<span class="badge badge-muted">Not attempted</span>`}</div>`;}).join("")}</details></section>`;
 }
-function openLearningProgress() {
+async function openLearningProgress() {
+  const uid=state.user?.uid,screen=state.screen;
+  await ensureCurrentScreenData();
+  if(state.user?.uid!==uid||state.screen!==screen)return;
   modal("Your learning progress", `<div class="progress-dialog">${renderLearningSummary()}</div>`, [{label:"Back", cls:"btn-ghost"}, {label:"Done", cls:"btn-primary"}]);
   bindAddedFeatures();
   $("modal").querySelectorAll("[data-go]").forEach(button => button.onclick = () => {closeModal();navigate(button.dataset.go);});
