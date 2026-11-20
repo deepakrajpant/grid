@@ -1,6 +1,6 @@
 /* ============================================================
    Dream Japan — JFT Mock Test (3-file SPA)
-   v4.5.0 — on-demand reads with bounded caches; existing screens and access checks
+   v4.5.1 — server-synced results, safe merging and on-demand reads
    ============================================================ */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
@@ -10,7 +10,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc,
-  collection, query, where, getDocs, addDoc, serverTimestamp, onSnapshot, orderBy, limit, runTransaction, deleteDoc, writeBatch, getCountFromServer
+  collection, query, where, getDocs, getDocsFromServer, addDoc, serverTimestamp, onSnapshot, orderBy, limit, runTransaction, deleteDoc, writeBatch, getCountFromServer
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
@@ -219,23 +219,21 @@ function resultTime(result) {
 }
 
 function latestBySet(rows) {
-  const sets = new Map();
-  const seen = new Set();
-  for (const row of [...rows].sort((a, b) => resultTime(b) - resultTime(a))) {
-    const setIdx = Number(row.setIdx);
-    if (!Number.isInteger(setIdx) || setIdx < 1 || setIdx > SET_NAMES.length) continue;
-    const id = row.attemptId || row.id;
-    if (seen.has(id)) continue;
-    seen.add(id);
-    const group = sets.get(setIdx);
-    if (!group) sets.set(setIdx, { latest: row, legacy: row.attemptCount ? 0 : 1, count: row.attemptCount || 0 });
-    else if (row.attemptCount) group.count = Math.max(group.count, row.attemptCount);
-    else group.legacy++;
+  const sets=new Map();
+  const valid=(Array.isArray(rows)?rows:[]).filter(row=>row && Number.isInteger(Number(row.setIdx)) && Number(row.setIdx)>=1 && Number(row.setIdx)<=SET_NAMES.length);
+  for(const row of [...valid].sort((a,b)=>resultTime(b)-resultTime(a))){
+    const setIdx=Number(row.setIdx);
+    let group=sets.get(setIdx);
+    if(!group){group={latest:row,count:0,legacy:new Set()};sets.set(setIdx,group);}
+    // Duplicate copies may have different saved attempt-count metadata. Keep
+    // the largest available count even when they identify the same attempt.
+    const count=Number(row.attemptCount);
+    if(Number.isFinite(count)&&count>0)group.count=Math.max(group.count,Math.floor(count));
+    else group.legacy.add(row.attemptId||row.id||JSON.stringify([row.submittedAt,row.score,row.percentage,row.timeUsed]));
   }
-  return [...sets.values()].map(({ latest, legacy, count }) => ({
-    ...latest, attemptCount: Math.max(legacy, count)
-  }));
+  return [...sets.values()].map(({latest,count,legacy})=>({...latest,attemptCount:Math.max(1,count,legacy.size)}));
 }
+
 function saveLocalAttempts(){if(!state.user)return;try{localStorage.setItem("dj_attempt_history_"+state.user.uid,JSON.stringify(state.results));}catch{toast("Browser storage is full; keep this result open until cloud saving completes.","warn");}}
 function saveResultsCache(uid, results) {
   try { localStorage.setItem(`${RESULTS_CACHE_KEY}_${uid}`, JSON.stringify({ ts: Date.now(), results })); } catch {}
@@ -617,45 +615,51 @@ async function cleanUpLegacy(uid, legacy, latest) {
   }
 }
 
-async function loadResults(uid) {
-  try {
-    const cached=JSON.parse(localStorage.getItem(`${RESULTS_CACHE_KEY}_${uid}`)||"null");
-    if(cached && Array.isArray(cached.results) && Date.now()-cached.ts>=0 && Date.now()-cached.ts<120000)
-      return latestBySet([...cached.results,...readLocalAttempts(uid)]);
-  } catch {}
-  return memoRead("results",()=>fetchResultsFromCloud(uid),120000);
+async function loadResults(uid, force=false, includeLegacy=false) {
+  // Persisted results paint immediately at boot; they must not suppress the
+  // first server sync in a new app session. Only in-memory reads are reused.
+  if(force){
+    const pending=fastReads.get(readScope("results"));
+    if(pending?.pending){try{await pending.promise;}catch{}}
+    if(state.user?.uid!==uid)return [];
+    clearFastReads("results");demandState.delete(readScope("results"));
+  }
+  return memoRead("results",()=>fetchResultsFromCloud(uid,includeLegacy),force?0:120000);
 }
-async function fetchResultsFromCloud(uid) {
-  try {
-    let cloud = resultRows(await getDocs(collection(db, "users", uid, "latestResults")));
-    if (state.user?.uid !== uid) return [];
-    if (!cloud.length) {
-      const legacy = await readLegacyResults(uid);
-      cloud = latestBySet(legacy);
-      if (cloud.length && hasPremium() && state.user?.uid === uid) {
-        try {
-          await checkFreeAccess();
-          cloud = await writeLatestResults(uid, legacy);
-          clearFastReads("leaderboard");
-          void cleanUpLegacy(uid, legacy, cloud);
-        } catch (error) {
-          console.warn("Legacy results remain available; migration will retry", error);
-        }
-      }
-    } else {
-      try {
-        if (localStorage.getItem(`dj_legacy_cleanup_${uid}`)) {
-          void readLegacyResults(uid).then(legacy => cleanUpLegacy(uid, legacy, cloud)).catch(console.warn);
-        }
-      } catch {}
+async function fetchResultsFromCloud(uid, includeLegacy=false) {
+  const generation=dataGeneration;
+  const previous=state.user?.uid===uid ? [...state.results] : [];
+  try{
+    const snapshot=await getDocsFromServer(collection(db,"users",uid,"latestResults"));
+    if(!sameDataSession(uid,generation))return [];
+    const cloud=resultRows(snapshot);
+    let legacy=[];
+    if(includeLegacy || !cloud.length){
+      legacy=resultRows(await getDocsFromServer(collection(db,"users",uid,"results")));
+      if(!sameDataSession(uid,generation))return [];
     }
-    const merged = latestBySet([...cloud, ...readLocalAttempts(uid)]);
-    saveResultsCache(uid, merged);
+    const merged=latestBySet([...cloud,...legacy,...readLocalAttempts(uid),...(loadResultsCache(uid)||[]),...previous]);
+    saveResultsCache(uid,merged);
+    state._resultsSyncError=null;
     return merged;
-  } catch {
-    return latestBySet([...(loadResultsCache(uid) || []), ...readLocalAttempts(uid)]);
+  }catch(error){
+    if(!sameDataSession(uid,generation))return [];
+    state._resultsSyncError=error;
+    // Keep the last known results if offline. Do not silently label them synced.
+    return latestBySet([...previous,...(loadResultsCache(uid)||[]),...readLocalAttempts(uid)]);
   }
 }
+async function syncProfileResults(){
+  const uid=state.user?.uid,generation=dataGeneration;if(!uid)return;
+  const rows=await loadResults(uid,true,true);
+  if(!sameDataSession(uid,generation))return;
+  if(state._resultsSyncError){toast("Could not sync results. Your saved data is unchanged. Please reconnect and retry.","warn");return;}
+  state.results=rows;saveLocalAttempts();saveResultsCache(uid,rows);
+  demandState.set(readScope("results"),{time:Date.now(),pending:false,error:null,promise:Promise.resolve(rows)});
+  if(state.screen==="profile")render();
+  toast("Results synced","ok");
+}
+
 async function loadPlans(force=false) {
   if(!force){const cached=loadPlansCache();if(Array.isArray(cached))return cached;}
   const uid=state.user?.uid,generation=dataGeneration;
@@ -1209,6 +1213,7 @@ function renderProfile() {
       <h2>${esc(p.name || "Student")}</h2><p>${esc(p.email || "")}</p>
       <div class="role-badge">${state.isAdmin ? " Administrator" : premActive ? " Premium" : "Student"}</div>
     </div>
+    <div class="flex-between mt-2"><span class="muted small">${state._resultsSyncError?"Offline results":"Latest results"}</span><button type="button" class="btn btn-ghost btn-sm" id="syncProfileResults">Sync results</button></div>
     <div class="grid-3 mt-2">
       <div class="stat-card center"><div class="num">${state.results.reduce((sum, row) => sum + (row.attemptCount || 1), 0)}</div><div class="lbl">Attempts</div></div>
       <div class="stat-card center"><div class="num">${streak}</div><div class="lbl">Streak</div></div>
@@ -1456,6 +1461,7 @@ function adminSettingsHTML() {
 
 /* ============ POST-RENDER ============ */
 function postRender() {
+  if($("syncProfileResults"))$("syncProfileResults").onclick=syncProfileResults;
   document.querySelectorAll("[data-attempt]").forEach(button => {
     button.onclick = () => {
       const result = state.results.find(row => (row.attemptId || row.id) === button.dataset.attempt);
@@ -1927,7 +1933,7 @@ async function saveResultToDb(result) {
     const legacy = knownCloud ? [] : await readLegacyResults(uid);
     if (state.user?.uid !== uid) throw new Error("Please sign in again");
     const latest = await writeLatestResults(uid, legacy, result);
-    if (legacy.length) void cleanUpLegacy(uid, legacy, latest);
+    // Keep legacy records intact; reading/saving is not a cleanup operation.
     if (state.user?.uid !== uid) return;
     const saved = latest.find(row => row.setIdx === result.setIdx);
     state.results = latestBySet([...latest, ...state.results.filter(row => row.attemptId !== result.attemptId)]);
@@ -2479,7 +2485,7 @@ function storePayload(key, value, storage=localStorage) {
 function sameDataSession(uid, generation) {return state.user?.uid===uid && dataGeneration===generation;}
 function resetDemandState() {
   dataGeneration++;demandState.clear();clearFastReads();
-  state._pendingSnapshot=null;state.contentError=null;
+  state._pendingSnapshot=null;state.contentError=null;state._resultsSyncError=null;
 }
 function resourceUsedOnScreen(key, screen) {
   if(key==="results")return ["home","profile","sets","start"].includes(screen);
